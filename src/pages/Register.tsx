@@ -1,9 +1,11 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { ArrowRight, Building2, LockKeyhole, Mail, CheckCircle2, LoaderCircle } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { supabase } from '@/lib/supabaseClient'
+import { WorkflowFrame } from '@/components/WorkflowFrame'
 
 const LAST_TENANT_KEY = 'onebridge:lastTenantSlug'
 
@@ -56,27 +58,29 @@ export function Register() {
 
   if (needsEmailConfirmation) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-gray px-4">
+      <WorkflowFrame title="One trusted start for your business." description="Create your account, confirm your email, then build from the business information you already have.">
         <Card className="max-w-md">
           <CardHeader>
+            <p className="ob-workflow-kicker"><CheckCircle2 size={15} /> ONE MORE STEP</p>
             <CardTitle>Check your email</CardTitle>
             <CardDescription>
               We sent a confirmation link to {email}. Confirm your account, then{' '}
-              <a href="/login" className="text-action-blue underline underline-offset-4">
+              <Link to="/login" className="text-action-blue underline underline-offset-4">
                 log in
-              </a>{' '}
+              </Link>{' '}
               to set up {businessName || 'your business'}.
             </CardDescription>
           </CardHeader>
         </Card>
-      </main>
+      </WorkflowFrame>
     )
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-gray px-4">
+    <WorkflowFrame title="Bring your business into better view." description="Create your account, then add the products, hours, and policies your customers and compatible AI assistants need.">
       <Card className="w-full max-w-md">
         <CardHeader>
+          <p className="ob-workflow-kicker"><Building2 size={15} /> START WITH WHAT YOU HAVE</p>
           <CardTitle>Set up your business</CardTitle>
           <CardDescription>
             Create an account, then we'll walk you through adding your products, hours, and
@@ -85,44 +89,56 @@ export function Register() {
         </CardHeader>
         <CardContent>
           <form className="flex flex-col gap-3" onSubmit={handleSubmit}>
+            <label className="ob-auth-field"><span><Building2 size={15} />Business name</span>
             <input
+              id="register-business"
               type="text"
               required
-              placeholder="Business name"
+              autoComplete="organization"
+              placeholder="Jorge's Auto Parts"
               value={businessName}
               onChange={(e) => setBusinessName(e.target.value)}
-              className="rounded-full border border-navy/20 px-4 py-2 text-sm text-navy focus:outline-none focus:ring-2 focus:ring-blue"
+              className="ob-auth-input"
             />
+            </label>
+            <label className="ob-auth-field"><span><Mail size={15} />Email address</span>
             <input
+              id="register-email"
               type="email"
               required
-              placeholder="Email"
+              autoComplete="email"
+              placeholder="you@yourbusiness.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="rounded-full border border-navy/20 px-4 py-2 text-sm text-navy focus:outline-none focus:ring-2 focus:ring-blue"
+              className="ob-auth-input"
             />
+            </label>
+            <label className="ob-auth-field"><span><LockKeyhole size={15} />Password</span>
             <input
+              id="register-password"
               type="password"
               required
               minLength={6}
+              autoComplete="new-password"
               placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="rounded-full border border-navy/20 px-4 py-2 text-sm text-navy focus:outline-none focus:ring-2 focus:ring-blue"
+              className="ob-auth-input"
             />
-            {error && <p className="text-sm text-orange">{error}</p>}
-            <Button type="submit" disabled={submitting}>
-              {submitting ? 'Creating...' : 'Create account'}
+            </label>
+            {error && <p role="alert" className="text-sm text-error">{error}</p>}
+            <Button type="submit" disabled={submitting} className="ob-auth-submit">
+              {submitting ? <><LoaderCircle size={17} className="motion-safe:animate-spin" /> Creating account...</> : <>Create account <ArrowRight size={17} /></>}
             </Button>
           </form>
           <p className="mt-4 text-center text-sm text-navy/60">
             Already have an account?{' '}
-            <a href="/login" className="text-action-blue underline underline-offset-4">
+            <Link to="/login" className="text-action-blue underline underline-offset-4">
               Log in
-            </a>
+            </Link>
           </p>
         </CardContent>
       </Card>
-    </main>
+    </WorkflowFrame>
   )
 }

@@ -1,3 +1,4 @@
+import { BarChart3, Compass, Handshake, Link2 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 import './Landing.css'
@@ -8,7 +9,7 @@ const ASSET = '/landing/'
 const judgeLinks = [
   {
     label: "Jorge's website",
-    description: 'The front door for people, generated from his verified data.',
+    description: 'The front door for people, generated from Jorge’s business-approved record.',
     href: `/site/${JORGE_SLUG}`,
   },
   {
@@ -24,7 +25,7 @@ const judgeLinks = [
   {
     label: 'Connected AI accuracy check',
     description: 'Compare answers with and without Jorge’s MCP connection.',
-    href: '/dashboard/monitoring',
+    href: `/dashboard/monitoring?slug=${JORGE_SLUG}`,
   },
   {
     label: 'Source on GitHub',
@@ -49,6 +50,33 @@ const steps = [
   {
     title: 'We stay with you',
     body: 'Update your information, inspect flagged inconsistencies, and track activity from your OneBridge platform.',
+  },
+]
+
+const growthPhases = [
+  {
+    label: 'LAND',
+    title: 'Start with visibility',
+    body: 'The business plan proposes a free AI Visibility Check so owners can see how supported assistants currently represent their business.',
+    icon: Compass,
+  },
+  {
+    label: 'PROVE',
+    title: 'Show the evidence',
+    body: 'Compare AI answers with owner-approved facts. The prototype demonstrates a focused comparison with and without Jorge’s MCP connection.',
+    icon: BarChart3,
+  },
+  {
+    label: 'CONNECT',
+    title: 'Build the trusted foundation',
+    body: 'Review business information, then publish a website and MCP from the same approved record.',
+    icon: Link2,
+  },
+  {
+    label: 'EXPAND',
+    title: 'Grow through trusted partners',
+    body: 'The pilot plan explores reaching more local businesses through chambers, small business centers, universities, and trade groups.',
+    icon: Handshake,
   },
 ]
 
@@ -87,7 +115,7 @@ export function Landing() {
             <p className="ob-eyebrow"><span className="ob-dot" />THE TRUSTED CONNECTION</p>
             <h1 id="hero-title">You know your business.<br /><span>Help AI understand it.</span></h1>
             <p className="ob-hero-description">
-              Help your business become more accessible to AI-assisted shopping, and help customers find accurate product information. OneBridge connects business-approved facts to a website for people and an MCP connection for compatible AI assistants.
+              Make trusted business information easier to access in AI-assisted shopping, and help customers make better choices. OneBridge connects business-approved facts to a website for people and an MCP connection for compatible AI assistants.
             </p>
             <Actions />
             <div className="ob-hero-points">
@@ -96,7 +124,7 @@ export function Landing() {
             </div>
           </div>
           <figure className="ob-flow-figure ob-enter ob-enter-delay">
-            <img src={`${ASSET}onebridge-flow.svg`} alt="Business documents, CSV files, and an existing website flow through OneBridge AI and owner review into an optimized website and MCP connection. The platform supports updates, review, and activity." />
+            <img src={`${ASSET}onebridge-flow.svg`} alt="Product vision: business documents, CSV files, and existing website information flow through OneBridge AI and owner review into an optimized website and MCP connection. The platform supports updates, review, and activity." />
           </figure>
         </section>
 
@@ -113,7 +141,7 @@ export function Landing() {
               <p className="ob-eyebrow">A WIN FOR BOTH SIDES</p>
               <h2 id="story-title">Local businesses get a voice.<br />Customers get better information.</h2>
             </div>
-            <p className="ob-body">The challenge is trustworthy AI product discovery: helping businesses be visible and accurately represented, while helping customers make better decisions.</p>
+            <p className="ob-body">The challenge is trustworthy AI product discovery: helping small businesses make reliable information available through emerging AI channels, while helping customers make better decisions.</p>
           </div>
           <img className="ob-people-scene" src={`${ASSET}jorge-and-maria-v2.png`} alt="Illustrated Jorge at his local auto parts store and Maria using her phone to find a brake rotor, connected through OneBridge." loading="lazy" />
           <div className="ob-benefit-grid">
@@ -128,6 +156,27 @@ export function Landing() {
               <p>Maria needs the right part, at the right price. Current compatibility and availability information helps her avoid wasted time, money, and misleading answers.</p>
             </article>
           </div>
+        </section>
+
+        <section className="ob-growth ob-container" aria-labelledby="growth-title">
+          <div className="ob-growth-heading">
+            <div>
+              <p className="ob-eyebrow">OUR GO-TO-MARKET: LAND → PROVE → CONNECT → EXPAND</p>
+              <h2 id="growth-title">Start with what AI says.<br />Build a connection people can trust.</h2>
+            </div>
+            <p className="ob-body">OneBridge begins by making the information gap visible, then helps a business improve and maintain the facts available to customers and compatible AI systems.</p>
+          </div>
+          <div className="ob-growth-grid">
+            {growthPhases.map(({ label, title, body, icon: Icon }, index) => (
+              <article className="ob-growth-card" key={label}>
+                <div className="ob-growth-top"><span className="ob-growth-icon"><Icon size={21} strokeWidth={1.8} /></span><span className="ob-growth-number">0{index + 1}</span></div>
+                <p className="ob-growth-label">{label}</p>
+                <h3>{title}</h3>
+                <p className="ob-growth-copy">{body}</p>
+              </article>
+            ))}
+          </div>
+          <p className="ob-growth-note"><span>PROTOTYPE SCOPE</span> The free, multi-assistant AI Visibility Check and partner expansion are planned. The current prototype demonstrates the Jorge walkthrough and a focused connected AI accuracy comparison. The business plan’s pilot targets and measures are goals, not achieved results.</p>
         </section>
 
         <section id="how-it-works" className="ob-how ob-container" aria-labelledby="how-title">

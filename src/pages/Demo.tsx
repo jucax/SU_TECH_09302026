@@ -4,6 +4,7 @@ import {
   FileText,
   Globe,
   ImagePlus,
+  LoaderCircle,
   type LucideIcon,
   Pencil,
   Plus,
@@ -20,6 +21,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { parseProductsCsv } from '@lib/csv'
 import { formatPriceCents } from '@lib/format'
 import type { HoursEntry, Policy, Product } from '@lib/schemas'
+import '@/pages/Workflow.css'
 
 const LAST_TENANT_KEY = 'onebridge:lastTenantSlug'
 const BUSINESS_NAME = "Jorge's Auto Parts"
@@ -93,13 +95,18 @@ function Note({ children }: { children: React.ReactNode }) {
 
 function StepList({ steps, current }: { steps: string[]; current: number }) {
   return (
-    <div className="flex flex-col gap-3">
+    <ol className="ob-processing-list" aria-live="polite" aria-label="Setup progress">
       {steps.map((label, i) => (
-        <p key={label} className={`text-sm ${i <= current ? 'font-semibold text-navy' : 'text-secondary'}`}>
-          {i < current ? '✓' : i === current ? '…' : '·'} {label}
-        </p>
+        <li key={label} className={i < current ? 'is-complete' : i === current ? 'is-active' : ''}>
+          <span className="ob-processing-icon" aria-hidden="true">
+            {i < current ? <Check size={16} /> : i === current ? <LoaderCircle size={16} className="motion-safe:animate-spin" /> : <span>{String(i + 1).padStart(2, '0')}</span>}
+          </span>
+          <span>{label}</span>
+          {i === current && <span className="sr-only">In progress</span>}
+          {i < current && <span className="sr-only">Complete</span>}
+        </li>
       ))}
-    </div>
+    </ol>
   )
 }
 
@@ -363,8 +370,21 @@ export function Demo() {
   }
 
   return (
-    <main className="min-h-screen bg-gray px-4 py-12">
-      <div className="mx-auto flex max-w-3xl flex-col gap-6">
+    <main className="ob-workflow-page ob-demo-page min-h-screen bg-gray px-4 pb-12">
+      <header className="ob-workflow-header">
+        <a href="/" aria-label="OneBridge home"><img src="/brand/logo-primary.png" alt="OneBridge" /></a>
+        <span>GUIDED LIVE DEMO</span>
+      </header>
+      <div className="mx-auto flex max-w-4xl flex-col gap-6">
+        <nav className="ob-demo-progress" aria-label="Demo stages">
+          {['Sources', 'Clean & review', 'Publish', 'Two front doors'].map((label, index) => {
+            const stage = scene === 'intro' || scene === 'sources' ? 0 : scene === 'cleaning' ? 1 : scene === 'setup' ? 2 : scene === 'bridging' ? 2 : 3
+            const complete = index < stage
+            const active = index === stage
+            return <div key={label} className={complete ? 'is-complete' : active ? 'is-active' : ''} aria-current={active ? 'step' : undefined}><span>{complete ? <Check size={14} /> : `0${index + 1}`}</span><small>{label}</small></div>
+          })}
+        </nav>
+        <div className="ob-demo-scenes">
         {scene === 'intro' && (
           <Card>
             <CardHeader>
@@ -905,6 +925,7 @@ export function Demo() {
             </div>
           </>
         )}
+        </div>
       </div>
     </main>
   )

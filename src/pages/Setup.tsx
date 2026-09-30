@@ -1,10 +1,12 @@
-import { Check, ImagePlus, Pencil, Plus, Trash2, X } from 'lucide-react'
+import { Check, ImagePlus, LoaderCircle, Pencil, Plus, Trash2, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { supabase } from '@/lib/supabaseClient'
+import { WorkflowFrame } from '@/components/WorkflowFrame'
+import '@/pages/Workflow.css'
 import { parseProductsCsv } from '@lib/csv'
 import { formatPriceCents } from '@lib/format'
 import type { HoursEntry, Policy, Product } from '@lib/schemas'
@@ -226,9 +228,10 @@ export function Setup() {
 
   if (!slug) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-gray px-4">
+      <WorkflowFrame title="Start with your business name." description="You can bring products and policies later, and nothing is published before you review it.">
         <Card className="w-full max-w-md">
           <CardHeader>
+            <p className="ob-workflow-kicker"><span /> CREATE YOUR BUSINESS SPACE</p>
             <CardTitle>What's your business called?</CardTitle>
           </CardHeader>
           <CardContent>
@@ -243,20 +246,24 @@ export function Setup() {
               />
               {publishError && <p className="text-sm text-error">{publishError}</p>}
               <Button type="submit" disabled={creatingTenant}>
-                {creatingTenant ? 'Creating...' : 'Continue'}
+                {creatingTenant ? <><LoaderCircle size={16} className="motion-safe:animate-spin" /> Creating...</> : 'Continue'}
               </Button>
             </form>
           </CardContent>
         </Card>
-      </main>
+      </WorkflowFrame>
     )
   }
 
   return (
-    <main className="min-h-screen bg-gray px-4 py-12">
+    <main className="ob-workflow-page ob-setup-page min-h-screen bg-gray px-4 pb-12">
+      <header className="ob-workflow-header">
+        <a href="/" aria-label="OneBridge home"><img src="/brand/logo-primary.png" alt="OneBridge" /></a>
+        <span>BUSINESS SETUP</span>
+      </header>
       <div className="mx-auto flex max-w-3xl flex-col gap-6">
         <div>
-          <p className="text-sm font-semibold text-action-blue">Setup wizard</p>
+          <p className="ob-workflow-kicker"><span /> YOUR BUSINESS, YOUR INFORMATION</p>
           <h1 className="text-3xl font-extrabold text-navy">Add your business information</h1>
           <p className="mt-1 text-sm text-secondary">
             Nothing here is published until you review it below and click Publish. Everything is
@@ -548,7 +555,7 @@ export function Setup() {
               onClick={handlePublish}
               disabled={publishing || products.length === 0 || editingProductIndex !== null}
             >
-              {publishing ? 'Publishing...' : 'Publish'}
+              {publishing ? <><LoaderCircle size={16} className="motion-safe:animate-spin" /> Publishing...</> : 'Publish'}
             </Button>
           </CardContent>
         </Card>
