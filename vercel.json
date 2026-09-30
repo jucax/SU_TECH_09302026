@@ -1,7 +1,7 @@
 {
   "rewrites": [
-    { "source": "/site/:tenant/llms.txt", "destination": "/api/llms-txt?tenant=:tenant" },
-    { "source": "/site/:tenant/robots.txt", "destination": "/api/robots-txt?tenant=:tenant" },
+    { "source": "/site/:tenant/llms.txt", "destination": "/api/discovery?tenant=:tenant&kind=llms" },
+    { "source": "/site/:tenant/robots.txt", "destination": "/api/discovery?tenant=:tenant&kind=robots" },
     { "source": "/site/:tenant/mcp", "destination": "/api/mcp?tenant=:tenant" },
     { "source": "/site/:tenant", "destination": "/api/site?tenant=:tenant" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }

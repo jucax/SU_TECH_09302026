@@ -34,7 +34,7 @@ export function Register() {
         return
       }
 
-      const createRes = await fetch('/api/create-tenant', {
+      const createRes = await fetch('/api/tenant', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

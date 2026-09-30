@@ -36,7 +36,7 @@ export function ReviewQueue() {
   }, [searchParams])
 
   const load = useCallback((forSlug: string) => {
-    return fetch(`/api/review-queue?slug=${encodeURIComponent(forSlug)}`)
+    return fetch(`/api/review?slug=${encodeURIComponent(forSlug)}`)
       .then(async (res) => {
         if (!res.ok) throw new Error((await res.json()).error ?? 'Failed to load')
         return res.json() as Promise<{ items: ReviewQueueItem[] }>
@@ -53,7 +53,7 @@ export function ReviewQueue() {
     if (!slug) return
     setDecidingId(id)
     try {
-      const res = await fetch('/api/review-decide', {
+      const res = await fetch('/api/review', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ slug, reviewId: id, decision }),

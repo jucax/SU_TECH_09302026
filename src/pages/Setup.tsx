@@ -52,7 +52,7 @@ export function Setup() {
       const token = sessionData.session?.access_token
       if (!token) throw new Error('Please log in again.')
 
-      const res = await fetch('/api/create-tenant', {
+      const res = await fetch('/api/tenant', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ name: businessName }),

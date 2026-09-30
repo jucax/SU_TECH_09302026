@@ -26,7 +26,7 @@ export function Login() {
       })
       if (signInError) throw signInError
 
-      const myTenantRes = await fetch('/api/my-tenant', {
+      const myTenantRes = await fetch('/api/tenant', {
         headers: { Authorization: `Bearer ${data.session.access_token}` },
       })
       const myTenantBody = await myTenantRes.json()
