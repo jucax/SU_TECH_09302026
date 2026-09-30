@@ -22,6 +22,7 @@ function buildServer(tenant: TenantRow, record: VerifiedRecord): McpServer {
     {
       description: "Get this business's name and hours of operation.",
       inputSchema: {},
+      annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
     },
     async () => {
       await logMcpRequest(tenant.id, 'getBusinessProfile')
@@ -29,7 +30,7 @@ function buildServer(tenant: TenantRow, record: VerifiedRecord): McpServer {
         .sort((a, b) => a.dayOfWeek - b.dayOfWeek)
         .map((h) => ({ day: formatDayOfWeek(h.dayOfWeek), hours: formatHoursEntry(h) }))
       return {
-        content: [{ type: 'text', text: JSON.stringify({ name: record.profile.name, hours }) }],
+        content: [{ type: 'text', text: JSON.stringify({ name: record.profile.name, slug: record.profile.slug, hours }) }],
       }
     },
   )
@@ -39,26 +40,31 @@ function buildServer(tenant: TenantRow, record: VerifiedRecord): McpServer {
     {
       description:
         "List this business's products. Optionally filter by a search term matched " +
-        'against product name or vehicle/use compatibility.',
+        'against product name, description, or vehicle/use compatibility. Prices and stock reflect the approved record, not a live point-of-sale check.',
+      annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
       inputSchema: {
-        query: z.string().optional().describe('Optional search term, e.g. a product name or vehicle'),
+        query: z.string().trim().min(1).optional().describe('Optional search term, e.g. a product name or vehicle'),
       },
     },
     async ({ query }) => {
       await logMcpRequest(tenant.id, 'listProducts')
-      const needle = query?.toLowerCase()
+      const needle = query?.trim().toLowerCase()
       const products = record.products
         .filter(
           (p) =>
             !needle ||
             p.name.toLowerCase().includes(needle) ||
+            (p.description?.toLowerCase().includes(needle) ?? false) ||
             (p.compatibility?.toLowerCase().includes(needle) ?? false),
         )
         .map((p) => ({
           name: p.name,
+          description: p.description ?? null,
+          priceCents: p.priceCents,
+          currency: p.currency,
           price: formatPriceCents(p.priceCents, p.currency),
           available: p.available,
-          compatibility: p.compatibility,
+          compatibility: p.compatibility ?? null,
         }))
       return { content: [{ type: 'text', text: JSON.stringify(products) }] }
     },
@@ -67,13 +73,19 @@ function buildServer(tenant: TenantRow, record: VerifiedRecord): McpServer {
   server.registerTool(
     'checkAvailability',
     {
-      description: 'Check whether a specific product is in stock and get its current price.',
-      inputSchema: { productName: z.string().describe('The product name to check') },
+      description: 'Check approved availability and price for an exact or unique product match. Ambiguous names require clarification; stock is not a reservation.',
+      annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+      inputSchema: { productName: z.string().trim().min(1).describe('The product name to check') },
     },
     async ({ productName }) => {
       await logMcpRequest(tenant.id, 'checkAvailability')
-      const needle = productName.toLowerCase()
-      const match = record.products.find((p) => p.name.toLowerCase().includes(needle))
+      const needle = productName.trim().toLowerCase()
+      const exact = record.products.filter(p => p.name.toLowerCase() === needle)
+      const matches = exact.length ? exact : record.products.filter(p => p.name.toLowerCase().includes(needle))
+      if (matches.length > 1) {
+        return { content: [{ type: 'text', text: JSON.stringify({ found: false, ambiguous: true, candidates: matches.map(p => p.name), message: 'Multiple products match. Ask for a specific product name.' }) }] }
+      }
+      const match = matches[0]
 
       if (!match) {
         return { content: [{ type: 'text', text: JSON.stringify({ found: false }) }] }
@@ -85,9 +97,12 @@ function buildServer(tenant: TenantRow, record: VerifiedRecord): McpServer {
             text: JSON.stringify({
               found: true,
               name: match.name,
+              description: match.description ?? null,
+              priceCents: match.priceCents,
+              currency: match.currency,
               available: match.available,
               price: formatPriceCents(match.priceCents, match.currency),
-              compatibility: match.compatibility,
+              compatibility: match.compatibility ?? null,
             }),
           },
         ],
@@ -100,7 +115,8 @@ function buildServer(tenant: TenantRow, record: VerifiedRecord): McpServer {
     {
       description:
         "Get this business's policies (returns, pickup, warranty, etc). Optionally filter by kind.",
-      inputSchema: { kind: z.string().optional().describe('Optional policy kind, e.g. "returns"') },
+      annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+      inputSchema: { kind: z.string().trim().min(1).optional().describe('Optional policy kind, e.g. "returns"') },
     },
     async ({ kind }) => {
       await logMcpRequest(tenant.id, 'getPolicies')
@@ -115,6 +131,8 @@ function buildServer(tenant: TenantRow, record: VerifiedRecord): McpServer {
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  res.setHeader('Cache-Control', 'no-store')
+  res.setHeader('X-Content-Type-Options', 'nosniff')
   const slug = typeof req.query.tenant === 'string' ? req.query.tenant : undefined
   if (!slug) {
     res.status(400).send('Missing tenant.')
@@ -135,6 +153,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   if (req.method !== 'POST') {
+    res.setHeader('Allow', 'POST')
     res.status(405).json({
       jsonrpc: '2.0',
       error: { code: -32000, message: 'Method not allowed.' },

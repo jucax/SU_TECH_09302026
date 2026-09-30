@@ -65,7 +65,7 @@ export function UpdateChat({ phase, demo, example, reviewHref, onSubmit }: Updat
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 id="update-heading" className="flex items-center gap-2 text-lg font-bold text-navy">
+          <h2 id="update-heading" tabIndex={-1} className="flex items-center gap-2 text-lg font-bold text-navy">
             <Sparkles size={20} aria-hidden="true" className="text-action-blue" />
             Update with OneBridge AI
           </h2>

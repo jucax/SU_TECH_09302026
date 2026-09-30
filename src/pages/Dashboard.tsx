@@ -300,9 +300,12 @@ export function Dashboard() {
     : null
 
   function focusUpdateBox() {
-    const el = document.getElementById(demo ? 'onebridge-apply' : UPDATE_INPUT_ID)
-    el?.scrollIntoView?.({ block: 'center', behavior: 'smooth' })
-    el?.focus()
+    const preferred = document.getElementById(demo ? 'onebridge-apply' : UPDATE_INPUT_ID)
+    const input = document.getElementById(UPDATE_INPUT_ID)
+    const el = preferred && !preferred.matches(':disabled') ? preferred
+      : input && !input.matches(':disabled') ? input : document.getElementById('update-heading')
+    el?.scrollIntoView?.({ block: 'center', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' })
+    el?.focus({ preventScroll: true })
   }
 
   // Same structure -> apply handshake as before. The phases only mark calls
@@ -509,6 +512,8 @@ export function Dashboard() {
             onEdit={focusUpdateBox}
           />
           <McpPreview
+            record={record}
+            inspectOnLoad={searchParams.get('inspect') === 'mcp'}
             product={product}
             businessName={record.profile.name}
             slug={record.profile.slug}

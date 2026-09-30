@@ -1,29 +1,36 @@
-// A tenant's site wants to be found, especially by AI systems -- that's the
-// whole pitch -- so this explicitly welcomes the major AI crawlers by name
-// rather than leaving it to a bare wildcard rule. Every Allow here is real:
-// none of these paths are actually restricted. No Sitemap directive: we
-// don't generate a sitemap.xml, and pointing at one that doesn't exist would
-// be wrong, not just incomplete.
-export function renderRobotsTxt(businessName: string, llmsTxtUrl: string): string {
-  const aiCrawlers = [
-    'GPTBot', // OpenAI
-    'ClaudeBot', // Anthropic
-    'Google-Extended', // Google's AI training/Gemini use
-    'PerplexityBot', // Perplexity
-    'CCBot', // Common Crawl, widely used to build AI training sets
-    'Bytespider', // ByteDance
-  ]
+// Crawlers only apply robots.txt at the origin root. Tenant copies are
+// informational; they cannot define independent policy on a shared domain.
+export function renderRootRobotsTxt(origin: string): string {
+  return `# OneBridge: public storefronts, business-approved facts.
+# Crawl policy is advisory; authentication protects private operations.
+# LLMs.txt is a discovery hint, not a standard crawler directive.
+LLMs.txt: ${origin}/llms.txt
 
-  const aiBlocks = aiCrawlers.map((agent) => `User-agent: ${agent}\nAllow: /`).join('\n\n')
-
-  return `# robots.txt for ${businessName}, published through OneBridge.
-# Structured, AI-readable business information: ${llmsTxtUrl}
+# AI / LLM crawlers & fetchers
 
 User-agent: *
+Content-Signal: ai-train=yes, search=yes, ai-input=yes
 Allow: /
+Disallow: /api/
+Disallow: /dashboard
 
-# AI assistants and answer engines are explicitly welcome to read this
-# business's published information.
-${aiBlocks}
+# Public businesses: /site/<business-slug>
+# Business facts: /site/<business-slug>/llms.txt
+# Read-only MCP: /site/<business-slug>/mcp (POST, Streamable HTTP)
+# No sitemap is advertised because this deployment does not generate one.
+`
+}
+
+export function renderRobotsTxt(businessName: string, llmsTxtUrl: string): string {
+  const root = new URL(llmsTxtUrl).origin
+  const safeName = businessName.replace(/[\r\n]+/g, ' ')
+  return `# Discovery notes for ${safeName}, published through OneBridge.
+# This subpath file is informational. The operative crawl policy is:
+# ${root}/robots.txt
+# Business-approved facts: ${llmsTxtUrl}
+LLMs.txt: ${llmsTxtUrl}
+
+# Rules are inherited from the origin root; no tenant-wide permissions
+# or AI-training consent are declared by this informational file.
 `
 }

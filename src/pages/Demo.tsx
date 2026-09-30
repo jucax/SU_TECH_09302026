@@ -975,13 +975,13 @@ export function Demo() {
                   <CardContent>
                     <button
                       type="button"
-                      onClick={() => navigate(`/dashboard?slug=${encodeURIComponent(slug)}`)}
+                      onClick={() => navigate(`/dashboard?slug=${encodeURIComponent(slug)}&inspect=mcp`)}
                       className="flex w-full items-center gap-3 rounded-lg border border-action-blue bg-white p-4 text-left hover:bg-subtle-blue/70"
                     >
                       <Server className="h-6 w-6 shrink-0 text-action-blue" aria-hidden="true" />
                       <span>
                         <span className="block text-sm font-semibold text-navy">MCP server</span>
-                        <span className="block text-xs text-secondary">A live connection, not a document. Open it in the dashboard.</span>
+                        <span className="block text-xs text-secondary">Explore the approved data and read-only tools in your dashboard.</span>
                       </span>
                     </button>
                   </CardContent>
