@@ -13,10 +13,6 @@ dist-ssr
 *.local
 *.tsbuildinfo
 
-# Secrets
-.env
-.env.*
-!.env.example
 .vercel
 
 # Editor directories and files
@@ -29,4 +25,17 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-.env*
+
+# Claude Code: personal approval state and fetched skill content (reproducible
+# from skills-lock.json via `npx skills add`). .mcp.json and skills-lock.json
+# themselves are shared project config and stay tracked.
+.claude/settings.local.json
+.claude/skills/
+.agents/
+
+# Secrets. Kept last: `vercel env pull`/`vercel link` append their own bare
+# `.env*` line to the end of this file on every run, which would shadow an
+# earlier `!.env.example` negation. Keeping ours last means it always wins.
+.env
+.env.*
+!.env.example
