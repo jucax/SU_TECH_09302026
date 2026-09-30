@@ -81,7 +81,7 @@ function DiffTable({ diff }: { diff: ClaimDiffResult }) {
       {scored > 0 ? (
         <p className="text-sm text-secondary">
           {diff.matches}/{scored} verifiable claims correct
-          {diff.unverifiable > 0 && ` (${diff.unverifiable} not verifiable)`} — accuracy score{' '}
+          {diff.unverifiable > 0 && ` (${diff.unverifiable} not verifiable)`}, accuracy score{' '}
           <span className="font-semibold text-navy">{(diff.accuracyScore * 100).toFixed(0)}%</span>
         </p>
       ) : (

@@ -92,7 +92,7 @@ const CLEANING_STEPS = [
   'Finding products',
   'Finding business hours and policies',
   'Finding a matching color palette from your website',
-  "Looking for a logo — none found, we'll ask you to upload one",
+  "Looking for a logo (none found, we'll ask you to upload one)",
 ]
 
 const BRIDGE_STEPS = [
@@ -486,7 +486,7 @@ export function Demo() {
             </div>
             <Note>
               You can download or open each file below. These are the real, unedited files Jorge
-              sent over — OneBridge doesn't require any particular format to get started.
+              sent over. OneBridge doesn't require any particular format to get started.
             </Note>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               <SourceTile
@@ -617,7 +617,7 @@ export function Demo() {
                       <li key={i} className="flex items-center justify-between gap-3 py-2 text-sm">
                         <div className="min-w-0">
                           <span className="text-navy">{p.name || '(unnamed product)'}</span>
-                          {p.compatibility && <span className="text-secondary"> — {p.compatibility}</span>}
+                          {p.compatibility && <span className="text-secondary"> ({p.compatibility})</span>}
                         </div>
                         <div className="flex shrink-0 items-center gap-3">
                           <span className="font-semibold text-navy">{formatPriceCents(p.priceCents)}</span>
