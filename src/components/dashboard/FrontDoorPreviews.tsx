@@ -21,6 +21,7 @@ const PHASE_LABEL: Record<UpdatePhase, string> = {
 interface PreviewProps {
   product: Product | undefined
   businessName: string
+  logoUrl?: string | null
   slug: string
   phase: UpdatePhase
   onEdit: () => void
@@ -56,7 +57,7 @@ function cardRing(phase: UpdatePhase) {
   )
 }
 
-export function WebsitePreview({ product, businessName, slug, phase, onEdit }: PreviewProps) {
+export function WebsitePreview({ product, businessName, logoUrl, slug, phase, onEdit }: PreviewProps) {
   const done = phase === 'done'
   return (
     <Card className={cardRing(phase)}>
@@ -85,7 +86,12 @@ export function WebsitePreview({ product, businessName, slug, phase, onEdit }: P
           <span className="ml-2 truncate text-[11px] text-secondary">/site/{slug}</span>
         </div>
         <div className="flex h-[132px] flex-col gap-2 p-4">
-          <p className="text-xs font-semibold text-secondary">{businessName}</p>
+          <div className="flex items-center gap-1.5">
+            {logoUrl && (
+              <img src={logoUrl} alt="" className="h-4 w-4 shrink-0 rounded object-contain" />
+            )}
+            <p className="text-xs font-semibold text-secondary">{businessName}</p>
+          </div>
           {product ? (
             <>
               <p className="text-sm font-bold text-navy">{product.name}</p>

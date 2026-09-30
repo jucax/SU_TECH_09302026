@@ -60,6 +60,9 @@ export function renderSiteHtml(record: VerifiedRecord, origin: string): string {
   const name = escapeHtml(record.profile.name)
   const slug = record.profile.slug
   const structuredData = buildStructuredData(record, origin, slug)
+  const logoHtml = record.profile.logoUrl
+    ? `<img class="logo" src="${escapeHtml(record.profile.logoUrl)}" alt="${name} logo" />`
+    : ''
 
   const productsHtml = record.products.length
     ? record.products
@@ -135,6 +138,7 @@ export function renderSiteHtml(record: VerifiedRecord, origin: string): string {
       padding: 28px 20px;
     }
     header.site-header .inner { max-width: 1080px; margin: 0 auto; }
+    header.site-header .logo { height: 40px; width: auto; display: block; margin-bottom: 12px; border-radius: 6px; background: white; padding: 4px 8px; }
     header.site-header h1 { font-size: 1.75rem; font-weight: 800; margin: 0 0 4px; }
     header.site-header p { margin: 0; color: rgba(255,255,255,0.65); font-size: 0.875rem; }
     header.site-header nav { margin-top: 16px; display: flex; gap: 20px; }
@@ -208,6 +212,7 @@ export function renderSiteHtml(record: VerifiedRecord, origin: string): string {
 <body>
   <header class="site-header">
     <div class="inner">
+      ${logoHtml}
       <h1>${name}</h1>
       <p>Published business information</p>
       <nav>

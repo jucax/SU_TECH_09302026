@@ -42,6 +42,7 @@ export const businessProfileSchema = z.object({
     .min(1)
     .regex(/^[a-z0-9-]+$/, 'slug must be lowercase letters, numbers, and hyphens'),
   name: z.string().min(1),
+  logoUrl: z.string().url().nullable().optional(),
 })
 export type BusinessProfile = z.infer<typeof businessProfileSchema>
 

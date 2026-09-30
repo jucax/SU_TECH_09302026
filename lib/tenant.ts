@@ -10,6 +10,7 @@ export interface TenantRow {
   ownerUserId: string | null
   isCanonical: boolean
   demoSecret: string | null
+  logoUrl: string | null
   createdAt: string
 }
 
@@ -27,6 +28,7 @@ function mapTenantRow(row: {
   owner_user_id: string | null
   is_canonical: boolean
   demo_secret: string | null
+  logo_url: string | null
   created_at: string
 }): TenantRow {
   return {
@@ -36,11 +38,12 @@ function mapTenantRow(row: {
     ownerUserId: row.owner_user_id,
     isCanonical: row.is_canonical,
     demoSecret: row.demo_secret,
+    logoUrl: row.logo_url,
     createdAt: row.created_at,
   }
 }
 
-const TENANT_COLUMNS = 'id, slug, name, owner_user_id, is_canonical, demo_secret, created_at'
+const TENANT_COLUMNS = 'id, slug, name, owner_user_id, is_canonical, demo_secret, logo_url, created_at'
 
 export async function getTenantBySlug(slug: string): Promise<TenantRow | null> {
   const { data, error } = await getServiceClient()
@@ -116,11 +119,23 @@ export async function getVerifiedRecord(tenant: TenantRow): Promise<VerifiedReco
   const policies: Policy[] = policiesRes.data.map((p) => ({ kind: p.kind, body: p.body }))
 
   return {
-    profile: { slug: tenant.slug, name: tenant.name },
+    profile: { slug: tenant.slug, name: tenant.name, logoUrl: tenant.logoUrl },
     products,
     hours,
     policies,
   }
+}
+
+// Updates only the logo. Separate from applyChangeSet because a logo isn't
+// part of ChangeSet (no MCP tool or website field reads it as a fact to
+// verify -- it's presentation, not business data) and isn't logged to
+// updates_log for the same reason.
+export async function setTenantLogoUrl(tenantId: string, logoUrl: string | null): Promise<void> {
+  const { error } = await getServiceClient()
+    .from('tenants')
+    .update({ logo_url: logoUrl, updated_at: new Date().toISOString() })
+    .eq('id', tenantId)
+  if (error) throw error
 }
 
 // Writes a resolved change set to products/hours/policies and logs it to

@@ -3,8 +3,9 @@ import { z } from 'zod'
 
 import { getServiceClient } from '../lib/db.js'
 import { readWriteAuth } from '../lib/http.js'
+import { uploadTenantLogo } from '../lib/logo.js'
 import { hoursEntrySchema, policySchema, productSchema } from '../lib/schemas.js'
-import { assertCanWrite, getTenantBySlug } from '../lib/tenant.js'
+import { assertCanWrite, getTenantBySlug, setTenantLogoUrl } from '../lib/tenant.js'
 
 // The verification gate: nothing an owner enters in the setup wizard reaches
 // the database, the website, or the MCP server until this endpoint is
@@ -22,6 +23,9 @@ const publishSchema = z.object({
   products: z.array(productSchema.omit({ id: true })),
   hours: z.array(hoursEntrySchema),
   policies: z.array(policySchema),
+  // A data URL from the setup wizard's file input (real upload, read client-side
+  // via FileReader), not a hosted URL -- see lib/logo.ts for the accepted types.
+  logoDataUrl: z.string().nullable().optional(),
 })
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -35,7 +39,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     res.status(400).json({ error: 'Invalid setup data' })
     return
   }
-  const { slug, products, hours, policies } = parsed.data
+  const { slug, products, hours, policies, logoDataUrl } = parsed.data
 
   try {
     const tenant = await getTenantBySlug(slug)
@@ -54,6 +58,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     } catch {
       res.status(403).json({ error: 'Not authorized to publish this business' })
       return
+    }
+
+    if (logoDataUrl) {
+      const publicUrl = await uploadTenantLogo(tenant.id, logoDataUrl)
+      await setTenantLogoUrl(tenant.id, publicUrl)
     }
 
     const client = getServiceClient()

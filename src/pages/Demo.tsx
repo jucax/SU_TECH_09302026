@@ -156,7 +156,7 @@ export function Demo() {
 
   const [hours, setHours] = useState<HoursEntry[]>(DEMO_HOURS)
   const [policies, setPolicies] = useState<Policy[]>(DEMO_POLICIES)
-  const [logoUrl, setLogoUrl] = useState<string | null>(null)
+  const [logoDataUrl, setLogoDataUrl] = useState<string | null>(null)
 
   const [editingProductIndex, setEditingProductIndex] = useState<number | null>(null)
   const [productDraft, setProductDraft] = useState<ProductDraft | null>(null)
@@ -286,8 +286,28 @@ export function Demo() {
     setEditingPolicies(false)
   }
 
-  function handleLogoFile(file: File) {
-    setLogoUrl(URL.createObjectURL(file))
+  function readFileAsDataUrl(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve(String(reader.result ?? ''))
+      reader.onerror = () => reject(reader.error ?? new Error('Could not read file'))
+      reader.readAsDataURL(file)
+    })
+  }
+
+  async function handleLogoFile(file: File) {
+    setLogoDataUrl(await readFileAsDataUrl(file))
+  }
+
+  // The pre-made logo lives as a static SVG file, same as Jorge's other
+  // sample documents -- read it the same way a real upload is read, rather
+  // than special-casing a path string, so it goes through the identical
+  // publish path a real owner's upload would.
+  async function useJorgesLogo() {
+    const res = await fetch('/demo/jorges-logo.svg')
+    const svgText = await res.text()
+    const base64 = btoa(unescape(encodeURIComponent(svgText)))
+    setLogoDataUrl(`data:image/svg+xml;base64,${base64}`)
   }
 
   async function handleBridge() {
@@ -317,7 +337,13 @@ export function Demo() {
       const publishRes = await fetch('/api/setup-publish', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ slug: newSlug, products: publishableProducts, hours, policies }),
+        body: JSON.stringify({
+          slug: newSlug,
+          products: publishableProducts,
+          hours,
+          policies,
+          logoDataUrl,
+        }),
       })
       const publishBody = await publishRes.json()
       if (!publishRes.ok) throw new Error(publishBody.error ?? 'Could not publish the business')
@@ -708,16 +734,16 @@ export function Demo() {
                   className="hidden"
                   onChange={(e) => e.target.files?.[0] && handleLogoFile(e.target.files[0])}
                 />
-                {logoUrl ? (
+                {logoDataUrl ? (
                   <div className="flex flex-wrap items-center gap-4">
                     <div className="flex h-20 items-center rounded-lg border border-border bg-white px-4">
-                      <img src={logoUrl} alt="Jorge's Auto Parts logo" className="h-14 w-auto object-contain" />
+                      <img src={logoDataUrl} alt="Jorge's Auto Parts logo" className="h-14 w-auto object-contain" />
                     </div>
                     <div className="flex gap-2">
                       <Button size="sm" variant="secondary" onClick={() => logoInputRef.current?.click()}>
                         Replace logo
                       </Button>
-                      <Button size="sm" variant="secondary" onClick={() => setLogoUrl(null)}>
+                      <Button size="sm" variant="secondary" onClick={() => setLogoDataUrl(null)}>
                         Remove
                       </Button>
                     </div>
@@ -732,15 +758,15 @@ export function Demo() {
                       <Button size="sm" onClick={() => logoInputRef.current?.click()}>
                         Upload a logo
                       </Button>
-                      <Button size="sm" variant="secondary" onClick={() => setLogoUrl('/demo/jorges-logo.svg')}>
+                      <Button size="sm" variant="secondary" onClick={useJorgesLogo}>
                         Use Jorge's logo
                       </Button>
                     </div>
                   </div>
                 )}
                 <p className="mt-3 text-xs text-secondary">
-                  This prototype's published record doesn't store a logo yet, so it won't appear on
-                  the generated site below — shown here to complete what the setup screen asks for.
+                  This will publish with the record below and appear on the generated site and the
+                  dashboard.
                 </p>
               </CardContent>
             </Card>

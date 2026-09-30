@@ -478,14 +478,23 @@ export function Dashboard() {
           </div>
         )}
 
-        <header>
-          <h1 className="text-2xl font-bold leading-tight text-navy md:text-[28px]">
-            {record.profile.name}
-          </h1>
-          <p className="text-sm text-secondary">
-            One information foundation. Two connected front doors.
-            {activity && ` Last updated ${formatRelativeTime(activity.lastUpdatedAt)}.`}
-          </p>
+        <header className="flex items-center gap-3">
+          {record.profile.logoUrl && (
+            <img
+              src={record.profile.logoUrl}
+              alt={`${record.profile.name} logo`}
+              className="h-11 w-11 shrink-0 rounded-[10px] border border-border bg-white object-contain p-1"
+            />
+          )}
+          <div>
+            <h1 className="text-2xl font-bold leading-tight text-navy md:text-[28px]">
+              {record.profile.name}
+            </h1>
+            <p className="text-sm text-secondary">
+              One information foundation. Two connected front doors.
+              {activity && ` Last updated ${formatRelativeTime(activity.lastUpdatedAt)}.`}
+            </p>
+          </div>
         </header>
 
         <div className="grid items-stretch gap-4 lg:grid-cols-3">
@@ -493,6 +502,7 @@ export function Dashboard() {
           <WebsitePreview
             product={product}
             businessName={record.profile.name}
+            logoUrl={record.profile.logoUrl}
             slug={record.profile.slug}
             phase={phase}
             onEdit={focusUpdateBox}
