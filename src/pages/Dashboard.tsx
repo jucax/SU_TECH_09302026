@@ -1,14 +1,21 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { Bot, Globe, Package, RefreshCw } from 'lucide-react'
 
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { DashboardLayout } from '@/components/dashboard/DashboardLayout'
 import {
-  formatDayOfWeek,
-  formatHoursEntry,
-  formatPriceCents,
-  formatRelativeTime,
-} from '@lib/format'
+  McpPreview,
+  WebsitePreview,
+  type EditTarget,
+  type UpdatePhase,
+} from '@/components/dashboard/FrontDoorPreviews'
+import {
+  UPDATE_INPUT_ID,
+  UpdateChat,
+  type UpdateOutcome,
+} from '@/components/dashboard/UpdateChat'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { formatPriceCents, formatRelativeTime } from '@lib/format'
 import type { ChangeSet, VerifiedRecord } from '@lib/schemas'
 
 const LAST_TENANT_KEY = 'onebridge:lastTenantSlug'
@@ -26,16 +33,129 @@ interface ActivitySummary {
   accuracyTrend: Array<{ createdAt: string; accuracyScore: number }>
 }
 
-function Sparkline({ points }: { points: number[] }) {
-  if (points.length < 2) return null
-  const width = 160
-  const height = 32
-  const stepX = width / (points.length - 1)
-  const coords = points.map((p, i) => `${i * stepX},${height - p * height}`).join(' ')
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+
+function ProductsCard({ record }: { record: VerifiedRecord }) {
+  const active = record.products.filter((p) => p.available)
   return (
-    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} className="text-blue">
-      <polyline points={coords} fill="none" stroke="currentColor" strokeWidth="2" />
-    </svg>
+    <Card className="flex flex-col gap-3 p-5">
+      <header className="flex items-center gap-2">
+        <Package size={22} aria-hidden="true" className="text-action-blue" />
+        <h3 className="text-base font-bold text-navy">Active products</h3>
+      </header>
+      <p className="text-3xl font-extrabold tabular-nums text-navy">
+        {active.length}
+        <span className="ml-2 text-sm font-medium text-secondary">
+          of {record.products.length} published
+        </span>
+      </p>
+      {record.products.length === 0 ? (
+        <p className="text-sm text-secondary">No products published</p>
+      ) : (
+        <ul className="flex flex-col divide-y divide-border">
+          {record.products.slice(0, 5).map((p) => (
+            <li key={p.name} className="flex items-center justify-between gap-3 py-2 text-sm">
+              <span className="min-w-0 truncate font-semibold text-navy">{p.name}</span>
+              <span className="shrink-0 tabular-nums text-secondary">
+                {formatPriceCents(p.priceCents, p.currency)}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Card>
+  )
+}
+
+function Metric({
+  icon,
+  label,
+  value,
+  helper,
+}: {
+  icon: React.ReactNode
+  label: string
+  value: string
+  helper: string
+}) {
+  return (
+    <Card className="flex flex-col gap-1 p-5">
+      <div className="flex items-center gap-2 text-sm font-semibold text-secondary">
+        {icon}
+        {label}
+      </div>
+      <p className="text-3xl font-extrabold tabular-nums text-navy">{value}</p>
+      <p className="text-xs text-secondary">{helper}</p>
+    </Card>
+  )
+}
+
+function PerformanceSection({
+  activity,
+  failed,
+  onRetry,
+}: {
+  activity: ActivitySummary | null
+  failed: boolean
+  onRetry: () => void
+}) {
+  const byTool = activity ? Object.entries(activity.mcpRequestsByTool) : []
+  const maxTool = Math.max(1, ...byTool.map(([, n]) => n))
+
+  return (
+    <section aria-labelledby="performance-heading" className="flex flex-col gap-3">
+      <div className="flex items-center justify-between">
+        <h2 id="performance-heading" className="text-lg font-bold text-navy">
+          Performance
+        </h2>
+        {failed && (
+          <button
+            type="button"
+            onClick={onRetry}
+            className="inline-flex items-center gap-1 text-sm font-semibold text-action-blue underline underline-offset-4"
+          >
+            <RefreshCw size={14} aria-hidden="true" /> Activity unavailable, retry
+          </button>
+        )}
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <Metric
+          icon={<Globe size={18} aria-hidden="true" />}
+          label="Website visits (people)"
+          value="Not tracked yet"
+          helper="Visit counting is not built in this prototype, so no number is shown."
+        />
+        <Metric
+          icon={<Bot size={18} aria-hidden="true" />}
+          label="MCP calls (AI assistants)"
+          value={activity ? String(activity.mcpRequestCount) : failed ? 'Not available' : '...'}
+          helper="Recorded tool requests to this business's MCP server, not unique users."
+        />
+      </div>
+
+      {byTool.length > 0 && (
+        <Card className="p-5">
+          <p className="mb-3 text-sm font-semibold text-navy">MCP calls by tool</p>
+          <ul className="flex flex-col gap-2">
+            {byTool.map(([tool, n]) => (
+              <li key={tool} className="flex items-center gap-3 text-sm">
+                <span className="w-40 shrink-0 truncate font-mono text-xs text-secondary">
+                  {tool}
+                </span>
+                <span className="h-2 flex-1 rounded-full bg-gray">
+                  <span
+                    className="block h-2 rounded-full bg-blue"
+                    style={{ width: `${(n / maxTool) * 100}%` }}
+                  />
+                </span>
+                <span className="w-8 text-right tabular-nums text-navy">{n}</span>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      )}
+    </section>
   )
 }
 
@@ -44,13 +164,11 @@ export function Dashboard() {
   const [slug, setSlug] = useState<string | null>(null)
   const [record, setRecord] = useState<VerifiedRecord | null>(null)
   const [error, setError] = useState<string | null>(null)
-
-  const [instruction, setInstruction] = useState('')
-  const [applying, setApplying] = useState(false)
-  const [editError, setEditError] = useState<string | null>(null)
-  const [resultMessage, setResultMessage] = useState<string | null>(null)
-  const [heldForReview, setHeldForReview] = useState(false)
   const [activity, setActivity] = useState<ActivitySummary | null>(null)
+  const [activityFailed, setActivityFailed] = useState(false)
+
+  const [target, setTarget] = useState<EditTarget>('website')
+  const [phase, setPhase] = useState<UpdatePhase>('idle')
 
   useEffect(() => {
     const fromQuery = searchParams.get('slug')
@@ -69,10 +187,14 @@ export function Dashboard() {
   }, [])
 
   const loadActivity = useCallback((forSlug: string) => {
+    setActivityFailed(false)
     return fetch(`/api/activity?slug=${encodeURIComponent(forSlug)}`)
-      .then((res) => (res.ok ? (res.json() as Promise<ActivitySummary>) : null))
-      .then((data) => data && setActivity(data))
-      .catch(() => {})
+      .then((res) => {
+        if (!res.ok) throw new Error('activity')
+        return res.json() as Promise<ActivitySummary>
+      })
+      .then(setActivity)
+      .catch(() => setActivityFailed(true))
   }, [])
 
   useEffect(() => {
@@ -83,14 +205,17 @@ export function Dashboard() {
     loadActivity(slug)
   }, [slug, loadRecord, loadActivity])
 
-  async function handleApplyInstruction() {
-    if (!slug || !instruction.trim()) return
-    setApplying(true)
-    setEditError(null)
-    setResultMessage(null)
-    setHeldForReview(false)
+  function focusUpdateBox(next: EditTarget) {
+    setTarget(next)
+    document.getElementById(UPDATE_INPUT_ID)?.focus()
+  }
 
+  // Same structure -> apply handshake as before. The phases only mark calls
+  // that really happen, so the animation never runs ahead of the backend.
+  async function handleUpdate(instruction: string): Promise<UpdateOutcome> {
+    if (!slug) return { status: 'error', message: 'No business loaded.' }
     try {
+      setPhase('understanding')
       const structureRes = await fetch('/api/structure', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -98,9 +223,9 @@ export function Dashboard() {
       })
       const structureBody = await structureRes.json()
       if (!structureRes.ok) throw new Error(structureBody.error ?? 'Could not understand that')
-
       const { changeSet, summary } = structureBody as { changeSet: ChangeSet; summary: string }
 
+      setPhase('applying')
       const applyRes = await fetch('/api/apply-change', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -110,30 +235,42 @@ export function Dashboard() {
       if (!applyRes.ok) throw new Error(applyBody.error ?? 'Could not apply that change')
 
       if (applyBody.routing === 'review') {
-        setHeldForReview(true)
-        setResultMessage(`Held for owner review (${applyBody.ruleTriggered}): ${summary}`)
-      } else {
-        await loadRecord(slug)
-        setResultMessage(`Applied: ${summary}`)
+        // Held changes are not published, so neither preview moves.
+        loadActivity(slug)
+        setPhase('idle')
+        return {
+          status: 'review',
+          message: `Held for owner review (${applyBody.ruleTriggered}): ${summary}`,
+        }
       }
+
+      setPhase('refreshing')
+      await loadRecord(slug)
       loadActivity(slug)
-      setInstruction('')
+      setPhase('done')
+      await wait(2200)
+      setPhase('idle')
+      return { status: 'applied', message: `Applied: ${summary}` }
     } catch (err) {
-      setEditError(err instanceof Error ? err.message : 'Something went wrong')
-    } finally {
-      setApplying(false)
+      setPhase('idle')
+      return {
+        status: 'error',
+        message: err instanceof Error ? err.message : 'Something went wrong',
+      }
     }
   }
 
+  const q = slug ? `?slug=${encodeURIComponent(slug)}` : ''
+
   if (!slug) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-gray px-4">
+      <DashboardLayout slug={null}>
         <Card className="max-w-md">
           <CardHeader>
             <CardTitle>No business loaded</CardTitle>
             <CardDescription>
-              Go back to the landing page and click "See it work" to load Jorge's Auto Parts into
-              a private sandbox.
+              Go back to the landing page and click "See it work" to load Jorge's Auto Parts into a
+              private sandbox.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -142,204 +279,97 @@ export function Dashboard() {
             </a>
           </CardContent>
         </Card>
-      </main>
+      </DashboardLayout>
     )
   }
 
   if (error) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-gray px-4">
+      <DashboardLayout slug={slug}>
         <Card className="max-w-md">
           <CardHeader>
             <CardTitle>Couldn't load this business</CardTitle>
             <CardDescription>{error}</CardDescription>
           </CardHeader>
+          <CardContent>
+            <a href="/" className="text-sm text-action-blue underline underline-offset-4">
+              Back to landing
+            </a>
+          </CardContent>
         </Card>
-      </main>
+      </DashboardLayout>
     )
   }
 
   if (!record) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-gray px-4">
-        <p className="text-navy/60">Loading...</p>
-      </main>
+      <DashboardLayout slug={slug}>
+        <div className="grid gap-4 lg:grid-cols-3" aria-busy="true">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="h-72 rounded-card border border-border bg-white" />
+          ))}
+        </div>
+      </DashboardLayout>
     )
   }
 
+  const product = record.products[0]
+  const example = product
+    ? `Change ${product.name} from ${formatPriceCents(product.priceCents, product.currency)} to ${formatPriceCents(product.priceCents + 1000, product.currency)}`
+    : null
+
   return (
-    <main className="min-h-screen bg-gray px-4 py-12">
-      <div className="mx-auto flex max-w-3xl flex-col gap-6">
-        <div>
-          <p className="text-sm font-semibold text-blue">Verified record</p>
-          <h1 className="text-3xl font-extrabold text-navy">{record.profile.name}</h1>
-          <p className="text-sm text-navy/50">/{record.profile.slug}</p>
+    <DashboardLayout
+      slug={slug}
+      businessName={record.profile.name}
+      pendingReview={activity?.reviewCounts.pending ?? 0}
+    >
+      <div className="flex flex-col gap-6">
+        <header>
+          <h1 className="text-2xl font-bold leading-tight text-navy md:text-[28px]">
+            {record.profile.name}
+          </h1>
+          <p className="text-sm text-secondary">
+            One information foundation. Two connected front doors.
+            {activity && ` Last updated ${formatRelativeTime(activity.lastUpdatedAt)}.`}
+          </p>
+        </header>
+
+        <div className="grid gap-4 lg:grid-cols-3">
+          <ProductsCard record={record} />
+          <WebsitePreview
+            product={product}
+            businessName={record.profile.name}
+            slug={record.profile.slug}
+            phase={phase}
+            selected={target}
+            onEdit={focusUpdateBox}
+          />
+          <McpPreview
+            product={product}
+            businessName={record.profile.name}
+            slug={record.profile.slug}
+            phase={phase}
+            selected={target}
+            onEdit={focusUpdateBox}
+          />
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Update with plain language</CardTitle>
-            <CardDescription>
-              For example: "change the front brake rotor to $54.99 and mark it low stock."
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col gap-2 sm:flex-row">
-              <input
-                type="text"
-                value={instruction}
-                onChange={(e) => setInstruction(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleApplyInstruction()}
-                placeholder="Change the front brake rotor to $54.99 and mark it low stock"
-                className="flex-1 rounded-full border border-navy/20 px-4 py-2 text-sm text-navy placeholder:text-navy/40 focus:outline-none focus:ring-2 focus:ring-blue"
-                disabled={applying}
-              />
-              <Button onClick={handleApplyInstruction} disabled={applying || !instruction.trim()}>
-                {applying ? 'Applying...' : 'Apply'}
-              </Button>
-            </div>
-            {editError && <p className="mt-2 text-sm text-orange">{editError}</p>}
-            {resultMessage && (
-              <p className={`mt-2 text-sm ${heldForReview ? 'text-orange' : 'text-blue'}`}>
-                {resultMessage}
-                {heldForReview && slug && (
-                  <>
-                    {' '}
-                    <a
-                      href={`/dashboard/review?slug=${encodeURIComponent(slug)}`}
-                      className="underline underline-offset-4"
-                    >
-                      Go to review queue
-                    </a>
-                  </>
-                )}
-              </p>
-            )}
-          </CardContent>
-        </Card>
+        <UpdateChat
+          target={target}
+          onTargetChange={setTarget}
+          phase={phase}
+          example={example}
+          reviewHref={`/dashboard/review${q}`}
+          onSubmit={handleUpdate}
+        />
 
-        {activity && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Activity</CardTitle>
-              <CardDescription>
-                Real counts from this tenant's own data, not estimates.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-                <div>
-                  <p className="text-2xl font-extrabold text-navy">{activity.mcpRequestCount}</p>
-                  <p className="text-xs text-navy/50">MCP requests</p>
-                </div>
-                <div>
-                  <p className="text-2xl font-extrabold text-navy">{activity.updatesApplied}</p>
-                  <p className="text-xs text-navy/50">Updates applied</p>
-                </div>
-                <div>
-                  <p className="text-2xl font-extrabold text-navy">
-                    {activity.reviewCounts.pending}
-                  </p>
-                  <p className="text-xs text-navy/50">
-                    Pending review{' '}
-                    {slug && (
-                      <a
-                        href={`/dashboard/review?slug=${encodeURIComponent(slug)}`}
-                        className="text-action-blue underline underline-offset-4"
-                      >
-                        view
-                      </a>
-                    )}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-2xl font-extrabold text-navy">
-                    {activity.latestAccuracyScore !== null
-                      ? `${(activity.latestAccuracyScore * 100).toFixed(0)}%`
-                      : '—'}
-                  </p>
-                  <p className="text-xs text-navy/50">
-                    Latest accuracy ({activity.monitorRunCount} check
-                    {activity.monitorRunCount === 1 ? '' : 's'})
-                  </p>
-                </div>
-              </div>
-
-              <div className="mt-4 flex items-center justify-between gap-4 border-t border-navy/10 pt-4">
-                <p className="text-sm text-navy/60">
-                  Last updated {formatRelativeTime(activity.lastUpdatedAt)}
-                </p>
-                {activity.accuracyTrend.length >= 2 && (
-                  <Sparkline points={activity.accuracyTrend.map((p) => p.accuracyScore)} />
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Products</CardTitle>
-            <CardDescription>What Jorge sells, straight from the verified record.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ul className="flex flex-col divide-y divide-navy/10">
-              {record.products.map((product) => (
-                <li key={product.name} className="flex items-start justify-between gap-4 py-3">
-                  <div>
-                    <p className="font-semibold text-navy">{product.name}</p>
-                    {product.compatibility && (
-                      <p className="text-sm text-navy/60">{product.compatibility}</p>
-                    )}
-                  </div>
-                  <div className="shrink-0 text-right">
-                    <p className="font-semibold text-navy">
-                      {formatPriceCents(product.priceCents, product.currency)}
-                    </p>
-                    <p className={`text-sm ${product.available ? 'text-navy/60' : 'text-orange'}`}>
-                      {product.available ? 'In stock' : 'Unavailable'}
-                    </p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Hours</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ul className="grid grid-cols-2 gap-x-8 gap-y-1 text-sm sm:grid-cols-1">
-              {[...record.hours]
-                .sort((a, b) => a.dayOfWeek - b.dayOfWeek)
-                .map((entry) => (
-                  <li key={entry.dayOfWeek} className="flex justify-between gap-4">
-                    <span className="text-navy">{formatDayOfWeek(entry.dayOfWeek)}</span>
-                    <span className="text-navy/60">{formatHoursEntry(entry)}</span>
-                  </li>
-                ))}
-            </ul>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Policies</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ul className="flex flex-col gap-4">
-              {record.policies.map((policy) => (
-                <li key={policy.kind}>
-                  <p className="text-sm font-semibold capitalize text-navy">{policy.kind}</p>
-                  <p className="text-sm text-navy/70">{policy.body}</p>
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
+        <PerformanceSection
+          activity={activity}
+          failed={activityFailed}
+          onRetry={() => loadActivity(slug)}
+        />
       </div>
-    </main>
+    </DashboardLayout>
   )
 }
