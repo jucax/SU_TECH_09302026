@@ -3,10 +3,41 @@ import { useSearchParams } from 'react-router-dom'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { formatDayOfWeek, formatHoursEntry, formatPriceCents } from '@lib/format'
+import {
+  formatDayOfWeek,
+  formatHoursEntry,
+  formatPriceCents,
+  formatRelativeTime,
+} from '@lib/format'
 import type { ChangeSet, VerifiedRecord } from '@lib/schemas'
 
 const LAST_TENANT_KEY = 'onebridge:lastTenantSlug'
+
+interface ActivitySummary {
+  mcpRequestCount: number
+  mcpRequestsByTool: Record<string, number>
+  lastUpdatedAt: string
+  updatesApplied: number
+  updatesBySource: Record<string, number>
+  reviewCounts: { pending: number; approved: number; rejected: number }
+  monitorRunCount: number
+  latestAccuracyScore: number | null
+  latestMismatches: number | null
+  accuracyTrend: Array<{ createdAt: string; accuracyScore: number }>
+}
+
+function Sparkline({ points }: { points: number[] }) {
+  if (points.length < 2) return null
+  const width = 160
+  const height = 32
+  const stepX = width / (points.length - 1)
+  const coords = points.map((p, i) => `${i * stepX},${height - p * height}`).join(' ')
+  return (
+    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} className="text-blue">
+      <polyline points={coords} fill="none" stroke="currentColor" strokeWidth="2" />
+    </svg>
+  )
+}
 
 export function Dashboard() {
   const [searchParams] = useSearchParams()
@@ -19,6 +50,7 @@ export function Dashboard() {
   const [editError, setEditError] = useState<string | null>(null)
   const [resultMessage, setResultMessage] = useState<string | null>(null)
   const [heldForReview, setHeldForReview] = useState(false)
+  const [activity, setActivity] = useState<ActivitySummary | null>(null)
 
   useEffect(() => {
     const fromQuery = searchParams.get('slug')
@@ -36,12 +68,20 @@ export function Dashboard() {
       .then(setRecord)
   }, [])
 
+  const loadActivity = useCallback((forSlug: string) => {
+    return fetch(`/api/activity?slug=${encodeURIComponent(forSlug)}`)
+      .then((res) => (res.ok ? (res.json() as Promise<ActivitySummary>) : null))
+      .then((data) => data && setActivity(data))
+      .catch(() => {})
+  }, [])
+
   useEffect(() => {
     if (!slug) return
     setError(null)
     setRecord(null)
     loadRecord(slug).catch((err) => setError(err.message))
-  }, [slug, loadRecord])
+    loadActivity(slug)
+  }, [slug, loadRecord, loadActivity])
 
   async function handleApplyInstruction() {
     if (!slug || !instruction.trim()) return
@@ -76,6 +116,7 @@ export function Dashboard() {
         await loadRecord(slug)
         setResultMessage(`Applied: ${summary}`)
       }
+      loadActivity(slug)
       setInstruction('')
     } catch (err) {
       setEditError(err instanceof Error ? err.message : 'Something went wrong')
@@ -176,6 +217,65 @@ export function Dashboard() {
             )}
           </CardContent>
         </Card>
+
+        {activity && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Activity</CardTitle>
+              <CardDescription>
+                Real counts from this tenant's own data, not estimates.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+                <div>
+                  <p className="text-2xl font-extrabold text-navy">{activity.mcpRequestCount}</p>
+                  <p className="text-xs text-navy/50">MCP requests</p>
+                </div>
+                <div>
+                  <p className="text-2xl font-extrabold text-navy">{activity.updatesApplied}</p>
+                  <p className="text-xs text-navy/50">Updates applied</p>
+                </div>
+                <div>
+                  <p className="text-2xl font-extrabold text-navy">
+                    {activity.reviewCounts.pending}
+                  </p>
+                  <p className="text-xs text-navy/50">
+                    Pending review{' '}
+                    {slug && (
+                      <a
+                        href={`/dashboard/review?slug=${encodeURIComponent(slug)}`}
+                        className="text-blue underline underline-offset-4"
+                      >
+                        view
+                      </a>
+                    )}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-2xl font-extrabold text-navy">
+                    {activity.latestAccuracyScore !== null
+                      ? `${(activity.latestAccuracyScore * 100).toFixed(0)}%`
+                      : '—'}
+                  </p>
+                  <p className="text-xs text-navy/50">
+                    Latest accuracy ({activity.monitorRunCount} check
+                    {activity.monitorRunCount === 1 ? '' : 's'})
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-4 flex items-center justify-between gap-4 border-t border-navy/10 pt-4">
+                <p className="text-sm text-navy/60">
+                  Last updated {formatRelativeTime(activity.lastUpdatedAt)}
+                </p>
+                {activity.accuracyTrend.length >= 2 && (
+                  <Sparkline points={activity.accuracyTrend.map((p) => p.accuracyScore)} />
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <Card>
           <CardHeader>

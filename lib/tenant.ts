@@ -10,6 +10,7 @@ export interface TenantRow {
   ownerUserId: string | null
   isCanonical: boolean
   demoSecret: string | null
+  createdAt: string
 }
 
 // Who is asking to write to a tenant. api/*.ts routes build this from the
@@ -24,6 +25,7 @@ function mapTenantRow(row: {
   owner_user_id: string | null
   is_canonical: boolean
   demo_secret: string | null
+  created_at: string
 }): TenantRow {
   return {
     id: row.id,
@@ -32,13 +34,16 @@ function mapTenantRow(row: {
     ownerUserId: row.owner_user_id,
     isCanonical: row.is_canonical,
     demoSecret: row.demo_secret,
+    createdAt: row.created_at,
   }
 }
+
+const TENANT_COLUMNS = 'id, slug, name, owner_user_id, is_canonical, demo_secret, created_at'
 
 export async function getTenantBySlug(slug: string): Promise<TenantRow | null> {
   const { data, error } = await getServiceClient()
     .from('tenants')
-    .select('id, slug, name, owner_user_id, is_canonical, demo_secret')
+    .select(TENANT_COLUMNS)
     .eq('slug', slug)
     .maybeSingle()
 
@@ -49,7 +54,7 @@ export async function getTenantBySlug(slug: string): Promise<TenantRow | null> {
 export async function getTenantById(id: string): Promise<TenantRow | null> {
   const { data, error } = await getServiceClient()
     .from('tenants')
-    .select('id, slug, name, owner_user_id, is_canonical, demo_secret')
+    .select(TENANT_COLUMNS)
     .eq('id', id)
     .maybeSingle()
 
@@ -205,7 +210,7 @@ export async function logMcpRequest(tenantId: string, toolName: string): Promise
 export async function getCanonicalTenant(): Promise<TenantRow> {
   const { data, error } = await getServiceClient()
     .from('tenants')
-    .select('id, slug, name, owner_user_id, is_canonical, demo_secret')
+    .select(TENANT_COLUMNS)
     .eq('is_canonical', true)
     .single()
 
@@ -227,7 +232,7 @@ export async function cloneTenantForDemo(
   const { data: newTenantRow, error: insertTenantError } = await client
     .from('tenants')
     .insert({ slug, name: canonical.name, is_canonical: false, demo_secret: secret })
-    .select('id, slug, name, owner_user_id, is_canonical, demo_secret')
+    .select(TENANT_COLUMNS)
     .single()
   if (insertTenantError) throw insertTenantError
   const tenant = mapTenantRow(newTenantRow)
