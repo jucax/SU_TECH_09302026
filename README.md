@@ -9,7 +9,7 @@
 > ### This website is a demo
 > **This website is a demo showing the process of how OneBridge would work for a customer like Jorge.** Jorge is a fictional local auto-parts store owner. Every business, product, price, and file you see is example data created for this competition. The demo walks through what a real business owner would see, screen by screen, from first-time setup to day-to-day use. It is a working prototype, not a launched product, and it has no real customers. Section 4 explains each screen, and Section 3 states plainly which parts are fully working, which are illustrative, and which are not built.
 
-Judges do not need to install or run anything. Everything works on the hosted site above.
+Judges do not need to install or run anything. Everything works on the hosted site above. To run it yourself anyway, use `./run.sh` (Section 10).
 
 ---
 
@@ -24,6 +24,7 @@ Judges do not need to install or run anything. Everything works on the hosted si
 7. [Governance, accountability, and trust](#7-governance-accountability-and-trust)
 8. [Limitations](#8-limitations)
 9. [Sources and credits](#9-sources-and-credits)
+10. [Running it yourself](#10-running-it-yourself)
 
 ---
 
@@ -294,3 +295,20 @@ This addresses the ethics and governance requirement in the case.
 - **Standards and references:** [Model Context Protocol](https://modelcontextprotocol.io/), [llms.txt proposal](https://llmstxt.org/), [Google robots.txt guidance](https://developers.google.com/search/docs/crawling-indexing/robots/create-robots-txt), [Anthropic API documentation](https://docs.anthropic.com/).
 - All example business data (Jorge's Auto Parts) is fictional and created for this competition. Product and hero images on the generated storefront are illustrations.
 - All application code in this repository was written for this competition.
+
+## 10. Running it yourself
+
+You do not need to: the hosted prototype at <https://onebridge-botb-2026.vercel.app> is the same code. All build and run steps are scripted in `run.sh` in the main folder.
+
+```bash
+./run.sh build   # install exact dependencies, type-check browser and server code, bundle the app
+./run.sh         # the same, then start the full app (website, API, MCP server) at http://localhost:3000
+```
+
+Requirements:
+
+- **Node.js 20 or newer.**
+- **A Supabase database.** Create a free project at <https://supabase.com>, run `supabase/schema.sql` and then `supabase/seed.sql` in its SQL editor, then `cp .env.example .env` and fill in `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`. Without these, `./run.sh` builds the app and then prints these same steps.
+- **A free Vercel account.** `./run.sh` starts the app with `vercel dev`, which runs the `api/` functions exactly as they run in production. The first run asks you to log in.
+
+`ANTHROPIC_API_KEY` is optional. Without it the app behaves like the hosted demo, with the AI features shown as not enabled (Section 3).
