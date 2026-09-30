@@ -1,5 +1,8 @@
 {
   "rewrites": [
+    { "source": "/site/:tenant/llms.txt", "destination": "/api/llms-txt?tenant=:tenant" },
+    { "source": "/site/:tenant/robots.txt", "destination": "/api/robots-txt?tenant=:tenant" },
+    { "source": "/site/:tenant", "destination": "/api/site?tenant=:tenant" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ]
 }

@@ -1,4 +1,5 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import WebSocket from 'ws'
 
 // Server-only. Uses the service_role key, which bypasses Row Level Security
 // entirely (see supabase/schema.sql). Import this ONLY from api/*.ts functions.
@@ -23,6 +24,16 @@ export function getServiceClient(): SupabaseClient {
 
   cached = createClient(url, key, {
     auth: { persistSession: false },
+    // @supabase/supabase-js's SupabaseClient constructs a RealtimeClient
+    // unconditionally, even though we never use realtime here, and that
+    // constructor throws on any Node version without native WebSocket
+    // (Node < 22). Passing an explicit implementation makes this work
+    // regardless of the Node version the function actually runs on --
+    // don't rely on Vercel happening to run Node 22+.
+    // ws's type doesn't structurally match supabase-js's
+    // WebSocketLikeConstructor, but it satisfies it at runtime -- the
+    // well-known workaround for this is an explicit `any` here.
+    realtime: { transport: WebSocket as any },
   })
   return cached
 }

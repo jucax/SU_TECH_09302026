@@ -28,6 +28,22 @@ export function formatTime(time: string | null): string {
   return `${displayHour}:${minuteStr} ${period}`
 }
 
+// Used by lib/generate/site.ts before interpolating owner-supplied text into
+// HTML. Business names, product descriptions, and policy text all eventually
+// come from an owner (directly, or via the AI structuring step in M7/M11), so
+// none of it can be trusted as safe markup.
+const HTML_ESCAPES: Record<string, string> = {
+  '&': '&amp;',
+  '<': '&lt;',
+  '>': '&gt;',
+  '"': '&quot;',
+  "'": '&#39;',
+}
+
+export function escapeHtml(input: string): string {
+  return input.replace(/[&<>"']/g, (char) => HTML_ESCAPES[char])
+}
+
 export function formatHoursEntry(entry: {
   closed: boolean
   opensAt: string | null
