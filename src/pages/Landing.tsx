@@ -47,25 +47,15 @@ const steps = [
   },
 ]
 
-const plans = [
-  {
-    name: 'Starter',
-    for: 'For a business getting its information online.',
-    features: ['Verified business information', 'Website for People', 'MCP Server for AI', 'Owner review before publishing'],
-    featured: false,
-  },
-  {
-    name: 'Growth',
-    for: 'For a business that updates often.',
-    features: ['Everything in Starter', 'AI-assisted updates', 'Activity and freshness tracking', 'Inconsistency flags'],
-    featured: true,
-  },
-  {
-    name: 'Scale',
-    for: 'For a business with more products and locations.',
-    features: ['Everything in Growth', 'Larger catalogs', 'Multiple locations', 'Priority support'],
-    featured: false,
-  },
+const planFeatures = [
+  'One verified information foundation for your business',
+  'OneBridge AI cleans and structures your existing data',
+  'Website for People, created or optimized from your approved facts',
+  'MCP Server for AI, generated from the same approved facts',
+  'Dashboard with form and AI-assisted updates, no technical skills needed',
+  'robots.txt and llms.txt included where appropriate',
+  'Activity tracking: website visits, MCP requests, and information freshness',
+  'Human review for conflicting, uncertain, or material changes',
 ]
 
 function Actions() {
@@ -90,10 +80,12 @@ export function Landing() {
           <img src="/brand/logo-primary.png" alt="OneBridge" className="ob-logo" />
         </Link>
         <nav className="ob-nav" aria-label="Main navigation">
-          <a className="ob-nav-detail" href="#how-it-works">How it works</a>
+          <a className="ob-nav-detail" href="#our-story">Our Story</a>
+          <a className="ob-nav-detail" href="#how-it-works">How It Works</a>
           <a className="ob-nav-detail" href="#pricing">Pricing</a>
+          <a className="ob-nav-detail" href="#core-values">Core Values</a>
           <Link to="/login">Log in</Link>
-          <Link className="ob-button ob-button-small ob-button-outline" to="/register">Set up your business</Link>
+          <Link className="ob-button ob-button-small ob-button-outline" to="/register">Set Up Your Business</Link>
         </nav>
       </header>
 
@@ -123,7 +115,7 @@ export function Landing() {
           </div>
         </section>
 
-        <section className="ob-story-new ob-container" aria-labelledby="story-title">
+        <section id="our-story" className="ob-story-new ob-container" aria-labelledby="story-title">
           <div className="ob-story-heading">
             <div>
               <p className="ob-eyebrow">A WIN FOR BOTH SIDES</p>
@@ -169,26 +161,25 @@ export function Landing() {
         <section id="pricing" className="ob-pricing ob-container" aria-labelledby="pricing-title">
           <div className="ob-pricing-heading">
             <p className="ob-eyebrow">PRICING</p>
-            <h2 id="pricing-title">Simple plans for every stage of your business.</h2>
-            <p className="ob-body">Final pricing is still being defined. The amounts below are placeholders.</p>
+            <h2 id="pricing-title">One Simple Subscription</h2>
+            <p className="ob-body">A one-time setup fee and a flat monthly service fee. Nothing else.</p>
           </div>
-          <div className="ob-pricing-grid">
-            {plans.map((plan) => (
-              <article className={`ob-plan${plan.featured ? ' ob-plan-featured' : ''}`} key={plan.name}>
-                {plan.featured && <span className="ob-plan-badge">Placeholder: most popular</span>}
-                <h3>{plan.name}</h3>
-                <p className="ob-plan-for">{plan.for}</p>
-                <p className="ob-plan-price"><strong>$XX</strong><span>/ month</span></p>
-                <ul>
-                  {plan.features.map((feature) => <li key={feature}>{feature}</li>)}
-                </ul>
-                <Link className={`ob-button ${plan.featured ? 'ob-button-primary' : 'ob-button-outline'}`} to="/register">Get started</Link>
-              </article>
-            ))}
-          </div>
+          <article className="ob-plan">
+            <div className="ob-plan-prices">
+              <div><span className="ob-plan-label">One-time setup fee</span><p className="ob-plan-price"><strong>$250</strong></p></div>
+              <div><span className="ob-plan-label">Monthly service fee</span><p className="ob-plan-price"><strong>$149</strong><span>/ month</span></p></div>
+            </div>
+            <div className="ob-plan-body">
+              <h3>Everything You Need To Connect Both Front Doors</h3>
+              <ul>
+                {planFeatures.map((feature) => <li key={feature}>{feature}</li>)}
+              </ul>
+              <Link className="ob-button ob-button-primary" to="/register">Set Up Your Business <span aria-hidden="true">→</span></Link>
+            </div>
+          </article>
         </section>
 
-        <section className="ob-values-section" aria-labelledby="values-title">
+        <section id="core-values" className="ob-values-section" aria-labelledby="values-title">
           <div className="ob-container">
             <div className="ob-values-heading">
               <p className="ob-eyebrow">WHAT GUIDES US</p>
