@@ -370,12 +370,18 @@ export function Demo() {
   // sample documents -- read it the same way a real upload is read, rather
   // than special-casing a path string, so it goes through the identical
   // publish path a real owner's upload would.
-  async function useJorgesLogo() {
+  async function applyJorgesLogo() {
     const res = await fetch('/demo/jorges-logo.svg')
     const svgText = await res.text()
     const base64 = btoa(unescape(encodeURIComponent(svgText)))
     setLogoDataUrl(`data:image/svg+xml;base64,${base64}`)
   }
+
+  // Jorge's red logo is applied up front so the generated site and dashboard
+  // always carry it; the owner can still replace or remove it before publishing.
+  useEffect(() => {
+    void applyJorgesLogo().catch(() => {})
+  }, [])
 
   async function handleBridge() {
     setScene('bridging')
@@ -845,7 +851,7 @@ export function Demo() {
               <CardHeader>
                 <CardTitle>Logo</CardTitle>
                 <CardDescription>
-                  We didn't find a usable logo on Jorge's old site, same as the cleaning step said.
+                  We didn't find a usable logo on Jorge's old site, so Jorge's own logo is applied. Replace or remove it any time.
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -880,7 +886,7 @@ export function Demo() {
                       <Button size="sm" onClick={() => logoInputRef.current?.click()}>
                         Upload a logo
                       </Button>
-                      <Button size="sm" variant="secondary" onClick={useJorgesLogo}>
+                      <Button size="sm" variant="secondary" onClick={applyJorgesLogo}>
                         Use Jorge's logo
                       </Button>
                     </div>
