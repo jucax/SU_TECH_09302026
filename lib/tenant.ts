@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto'
+
 import type { HoursEntry, Policy, Product, VerifiedRecord } from './schemas'
 import { getServiceClient } from './db'
 
@@ -101,6 +103,81 @@ export async function getVerifiedRecord(tenant: TenantRow): Promise<VerifiedReco
     hours,
     policies,
   }
+}
+
+export async function getCanonicalTenant(): Promise<TenantRow> {
+  const { data, error } = await getServiceClient()
+    .from('tenants')
+    .select('id, slug, name, owner_user_id, is_canonical, demo_secret')
+    .eq('is_canonical', true)
+    .single()
+
+  if (error) throw error
+  return mapTenantRow(data)
+}
+
+// Clones the canonical tenant's products/hours/policies into a brand new
+// tenant, so each demo visitor gets their own private sandbox and the
+// canonical tenant (used in the live pitch and the README) never changes.
+// See docs/PLAN.md "M4" and the "session-scoped clone" decision.
+export async function cloneTenantForDemo(
+  canonical: TenantRow,
+): Promise<{ tenant: TenantRow; secret: string }> {
+  const client = getServiceClient()
+  const secret = randomUUID()
+  const slug = `${canonical.slug}-demo-${randomUUID().slice(0, 8)}`
+
+  const { data: newTenantRow, error: insertTenantError } = await client
+    .from('tenants')
+    .insert({ slug, name: canonical.name, is_canonical: false, demo_secret: secret })
+    .select('id, slug, name, owner_user_id, is_canonical, demo_secret')
+    .single()
+  if (insertTenantError) throw insertTenantError
+  const tenant = mapTenantRow(newTenantRow)
+
+  const record = await getVerifiedRecord(canonical)
+
+  if (record.products.length > 0) {
+    const { error } = await client.from('products').insert(
+      record.products.map((p) => ({
+        tenant_id: tenant.id,
+        name: p.name,
+        description: p.description,
+        price_cents: p.priceCents,
+        currency: p.currency,
+        available: p.available,
+        compatibility: p.compatibility,
+      })),
+    )
+    if (error) throw error
+  }
+
+  if (record.hours.length > 0) {
+    const { error } = await client.from('hours').insert(
+      record.hours.map((h) => ({
+        tenant_id: tenant.id,
+        day_of_week: h.dayOfWeek,
+        opens_at: h.opensAt,
+        closes_at: h.closesAt,
+        closed: h.closed,
+      })),
+    )
+    if (error) throw error
+  }
+
+  if (record.policies.length > 0) {
+    const { error } = await client.from('policies').insert(
+      record.policies.map((p) => ({ tenant_id: tenant.id, kind: p.kind, body: p.body })),
+    )
+    if (error) throw error
+  }
+
+  const { error: sessionError } = await client
+    .from('demo_sessions')
+    .insert({ tenant_id: tenant.id, cloned_from_tenant_id: canonical.id })
+  if (sessionError) throw sessionError
+
+  return { tenant, secret }
 }
 
 // Database-enforced RLS (supabase/schema.sql) already blocks anon/authenticated
