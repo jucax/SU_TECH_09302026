@@ -28,6 +28,25 @@ import '@/pages/Workflow.css'
 
 const LAST_TENANT_KEY = 'onebridge:lastTenantSlug'
 const BUSINESS_NAME = "Jorge's Auto Parts"
+// Bar timeline runs 6 AM to 8 PM so every demo day fits with room to spare.
+const BAR_START_MIN = 6 * 60
+const BAR_END_MIN = 20 * 60
+
+function hoursBarPercent(time: string | null): number {
+  if (!time) return 0
+  const [h, m] = time.split(':').map(Number)
+  const pct = (((h * 60 + m) - BAR_START_MIN) / (BAR_END_MIN - BAR_START_MIN)) * 100
+  return Math.min(100, Math.max(0, pct))
+}
+
+// "08:00" -> "8 AM", "15:30" -> "3:30 PM"
+function compactTime(time: string | null): string {
+  if (!time) return ''
+  const [h, m] = time.split(':').map(Number)
+  const hour = h % 12 === 0 ? 12 : h % 12
+  return `${hour}${m ? `:${String(m).padStart(2, '0')}` : ''} ${h >= 12 ? 'PM' : 'AM'}`
+}
+
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
 // Mirrors public/demo/jorges-hours-and-policies.pdf. Extracting this from the
@@ -697,15 +716,49 @@ export function Demo() {
                     </div>
                   </div>
                 ) : (
-                  <ul className="grid grid-cols-2 gap-x-8 gap-y-1 text-sm sm:grid-cols-1">
-                    {hours.map((h) => (
-                      <li key={h.dayOfWeek} className="flex justify-between gap-4">
-                        <span className="text-navy">{DAY_NAMES[h.dayOfWeek]}</span>
-                        <span className="text-secondary">
-                          {h.closed ? 'Closed' : `${h.opensAt} – ${h.closesAt}`}
-                        </span>
-                      </li>
-                    ))}
+                  <ul className="flex flex-col gap-1.5">
+                    {hours.map((h) => {
+                      const isToday = h.dayOfWeek === new Date().getDay()
+                      const left = h.closed ? 0 : hoursBarPercent(h.opensAt)
+                      const right = h.closed ? 0 : hoursBarPercent(h.closesAt)
+                      return (
+                        <li
+                          key={h.dayOfWeek}
+                          className={`grid grid-cols-[84px_1fr] items-center gap-x-4 gap-y-1.5 rounded-[10px] px-3 py-2 sm:grid-cols-[92px_1fr_150px] ${
+                            isToday ? 'bg-subtle-blue ring-1 ring-action-blue/30' : ''
+                          }`}
+                        >
+                          <span className="flex items-center gap-2 text-sm font-semibold text-navy">
+                            {DAY_NAMES[h.dayOfWeek].slice(0, 3)}
+                            {isToday && (
+                              <span className="rounded-full bg-action-blue px-1.5 py-px text-[10px] font-bold uppercase tracking-wide text-white">
+                                Today
+                              </span>
+                            )}
+                          </span>
+                          <span
+                            aria-hidden="true"
+                            className="relative hidden h-2 overflow-hidden rounded-full bg-border/70 sm:block"
+                          >
+                            {!h.closed && (
+                              <span
+                                className="absolute inset-y-0 rounded-full bg-action-blue"
+                                style={{ left: `${left}%`, width: `${Math.max(right - left, 2)}%` }}
+                              />
+                            )}
+                          </span>
+                          {h.closed ? (
+                            <span className="justify-self-end rounded-full bg-gray px-2.5 py-0.5 text-xs font-semibold text-secondary">
+                              Closed
+                            </span>
+                          ) : (
+                            <span className="justify-self-end whitespace-nowrap text-sm font-medium tabular-nums text-navy">
+                              {compactTime(h.opensAt)} to {compactTime(h.closesAt)}
+                            </span>
+                          )}
+                        </li>
+                      )
+                    })}
                   </ul>
                 )}
               </CardContent>
