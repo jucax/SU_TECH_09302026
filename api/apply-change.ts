@@ -35,7 +35,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return
     }
 
-    const auth = await readWriteAuth(req)
+    const auth = readWriteAuth(req)
     if (!auth) {
       res.status(401).json({ error: 'Not authorized to edit this business' })
       return

@@ -5,26 +5,18 @@ import { getServiceClient } from '../lib/db.js'
 import { readWriteAuth } from '../lib/http.js'
 import { uploadTenantLogo } from '../lib/logo.js'
 import { hoursEntrySchema, policySchema, productSchema } from '../lib/schemas.js'
-import { assertCanWrite, getTenantBySlug, setTenantLogoUrl } from '../lib/tenant.js'
+import { applyChangeSet, assertCanWrite, getTenantBySlug, setTenantLogoUrl } from '../lib/tenant.js'
 
-// The verification gate: nothing an owner enters in the setup wizard reaches
-// the database, the website, or the MCP server until this endpoint is
-// called, and the client only calls it after the owner has reviewed a
-// preview of the parsed data. Safe to call more than once for the same
-// tenant (e.g. the owner edits and republishes before ever seeing the
-// dashboard): products are replaced wholesale rather than accumulated.
-//
-// Accepts either a registered owner's session or a demo tenant's cookie
-// (readWriteAuth tries both) -- the guided demo walkthrough publishes to a
-// demo-secret tenant created via api/demo-start.ts's mode: 'fresh', not a
-// real signed-up owner.
+// The verification gate: nothing the owner reviews in the setup step reaches
+// the database, the website, or the MCP server until this endpoint is called.
+// Safe to call more than once for the same tenant.
 const publishSchema = z.object({
   slug: z.string(),
   products: z.array(productSchema.omit({ id: true })),
   hours: z.array(hoursEntrySchema),
   policies: z.array(policySchema),
-  // A data URL from the setup wizard's file input (real upload, read client-side
-  // via FileReader), not a hosted URL -- see lib/logo.ts for the accepted types.
+  // A data URL read client-side from a file input, not a hosted URL. See
+  // lib/logo.ts for the accepted image types and size limit.
   logoDataUrl: z.string().nullable().optional(),
 })
 
@@ -48,7 +40,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return
     }
 
-    const auth = await readWriteAuth(req)
+    const auth = readWriteAuth(req)
     if (!auth) {
       res.status(401).json({ error: 'Not authorized to publish this business' })
       return
@@ -65,57 +57,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       await setTenantLogoUrl(tenant.id, publicUrl)
     }
 
-    const client = getServiceClient()
-    const now = new Date().toISOString()
-
-    const { error: deleteError } = await client.from('products').delete().eq('tenant_id', tenant.id)
+    // Products are replaced wholesale, so republishing never duplicates them.
+    // Hours and policies upsert on their natural keys inside applyChangeSet.
+    const { error: deleteError } = await getServiceClient()
+      .from('products')
+      .delete()
+      .eq('tenant_id', tenant.id)
     if (deleteError) throw deleteError
 
-    if (products.length > 0) {
-      const { error } = await client.from('products').insert(
-        products.map((p) => ({
-          tenant_id: tenant.id,
-          name: p.name,
-          description: p.description ?? null,
-          price_cents: p.priceCents,
-          currency: p.currency,
-          available: p.available,
-          compatibility: p.compatibility ?? null,
-        })),
-      )
-      if (error) throw error
-    }
-
-    if (hours.length > 0) {
-      const { error } = await client.from('hours').upsert(
-        hours.map((h) => ({
-          tenant_id: tenant.id,
-          day_of_week: h.dayOfWeek,
-          opens_at: h.opensAt,
-          closes_at: h.closesAt,
-          closed: h.closed,
-          updated_at: now,
-        })),
-        { onConflict: 'tenant_id,day_of_week' },
-      )
-      if (error) throw error
-    }
-
-    if (policies.length > 0) {
-      const { error } = await client.from('policies').upsert(
-        policies.map((p) => ({ tenant_id: tenant.id, kind: p.kind, body: p.body, updated_at: now })),
-        { onConflict: 'tenant_id,kind' },
-      )
-      if (error) throw error
-    }
-
-    const { error: logError } = await client.from('updates_log').insert({
-      tenant_id: tenant.id,
-      summary: `Initial setup: ${products.length} product${products.length === 1 ? '' : 's'}, ${policies.length} polic${policies.length === 1 ? 'y' : 'ies'}`,
-      change_set: { productsCreate: products, hours, policies },
-      source: 'setup_wizard',
-    })
-    if (logError) throw logError
+    const summary = `Initial setup: ${products.length} product${products.length === 1 ? '' : 's'}, ${policies.length} polic${policies.length === 1 ? 'y' : 'ies'}`
+    await applyChangeSet(tenant, { productsCreate: products, hours, policies }, summary, 'setup_wizard')
 
     res.status(200).json({ ok: true })
   } catch (error) {

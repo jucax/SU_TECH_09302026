@@ -5,10 +5,10 @@ import { renderRootRobotsTxt, renderRobotsTxt } from '../lib/generate/robotsTxt.
 import { getOrigin } from '../lib/http.js'
 import { getTenantBySlug, getVerifiedRecord } from '../lib/tenant.js'
 
-// Combines what were api/llms-txt.ts and api/robots-txt.ts -- see
-// api/tenant.ts for why (Vercel's Hobby plan function count limit).
-// /site/:tenant/llms.txt and /site/:tenant/robots.txt both rewrite here (see
-// vercel.json), distinguished by the `kind` query param. Both need the
+// Serves both discovery files from one function, to stay under the Vercel
+// Hobby plan's 12-function limit. /site/:tenant/llms.txt and
+// /site/:tenant/robots.txt both rewrite here (see vercel.json), distinguished
+// by the `kind` query param. Both need the
 // tenant for business-specific facts. Origin-root files need no database lookup.
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const slug = typeof req.query.tenant === 'string' ? req.query.tenant : undefined

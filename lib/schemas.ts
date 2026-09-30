@@ -1,11 +1,10 @@
 import { z } from 'zod'
 
-// Shared Zod schemas for a tenant's verified record. Safe to import from both
-// api/*.ts (server) and src/ (browser) — no secrets, just shape validation.
-// Used by ingestion (setup wizard), the plain-language edit box, claim
-// extraction, and the diff engine, so those stay structurally in sync.
+// Shared schemas and API contracts. Safe to import from both api/*.ts (server)
+// and src/ (browser): no secrets and no server-only imports, just shapes. Keep
+// it that way, because the browser type-checks everything this file imports.
 
-export const dayOfWeekSchema = z.number().int().min(0).max(6) // 0 = Sunday, matches Postgres
+const dayOfWeekSchema = z.number().int().min(0).max(6) // 0 = Sunday, matches Postgres
 
 export const productSchema = z.object({
   id: z.string().uuid().optional(),
@@ -26,17 +25,14 @@ export const hoursEntrySchema = z.object({
 })
 export type HoursEntry = z.infer<typeof hoursEntrySchema>
 
-// Not a closed enum in the database (policies.kind is free text), but these are
-// the kinds the setup wizard and dashboard UI know how to render distinctly.
-export const knownPolicyKinds = ['returns', 'pickup', 'warranty'] as const
-
+// policies.kind is free text in the database, e.g. returns, pickup, warranty.
 export const policySchema = z.object({
   kind: z.string().min(1),
   body: z.string().min(1),
 })
 export type Policy = z.infer<typeof policySchema>
 
-export const businessProfileSchema = z.object({
+const businessProfileSchema = z.object({
   slug: z
     .string()
     .min(1)
@@ -44,7 +40,6 @@ export const businessProfileSchema = z.object({
   name: z.string().min(1),
   logoUrl: z.string().url().nullable().optional(),
 })
-export type BusinessProfile = z.infer<typeof businessProfileSchema>
 
 // A verified record: everything needed to render the website, generate
 // llms.txt/robots.txt, and answer MCP tool calls for one tenant.
@@ -84,3 +79,31 @@ export const changeSetSchema = z.object({
   policies: z.array(policySchema).optional(),
 })
 export type ChangeSet = z.infer<typeof changeSetSchema>
+
+// GET /api/activity response. Built by lib/activity.ts.
+export interface ActivitySummary {
+  mcpRequestCount: number
+  mcpRequestsByTool: Record<string, number>
+  lastUpdatedAt: string
+  updatesApplied: number
+  updatesBySource: Record<string, number>
+  reviewCounts: { pending: number; approved: number; rejected: number }
+  monitorRunCount: number
+  latestAccuracyScore: number | null
+  latestMismatches: number | null
+  accuracyTrend: Array<{ createdAt: string; accuracyScore: number }>
+}
+
+// One entry of GET /api/review. Built by lib/governance.ts.
+export interface ReviewQueueItem {
+  id: string
+  tenantId: string
+  summary: string
+  rawInstruction: string | null
+  changeSet: ChangeSet
+  ruleTriggered: string
+  status: 'pending' | 'approved' | 'rejected'
+  decidedBy: string | null
+  decidedAt: string | null
+  createdAt: string
+}

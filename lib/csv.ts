@@ -1,11 +1,9 @@
 import type { Product } from './schemas.js'
 
-// Deterministic CSV parsing for the M11 setup wizard, no AI involved. Expects
-// a header row with at minimum "name" and "priceCents" (or "price", treated
-// as dollars and converted); "available" and "compatibility" are optional.
-// This is a real, working ingestion path in its own right, not a stand-in
-// for the AI-structured path -- see docs/PLAN.md's explicit scope note that
-// manual form and CSV upload work live, with no AI requirement stated.
+// Deterministic CSV parsing for the setup step, no AI involved. Expects a
+// header row with at minimum "name" and "priceCents" (or "price", treated as
+// dollars and converted); "available" and "compatibility" are optional. This
+// is a real ingestion path in its own right, not a stand-in for AI structuring.
 
 export interface CsvParseError {
   row: number

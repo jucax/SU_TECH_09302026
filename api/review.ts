@@ -4,11 +4,10 @@ import { decideReviewItem, listReviewQueue } from '../lib/governance.js'
 import { readWriteAuth } from '../lib/http.js'
 import { assertCanWrite, getTenantBySlug } from '../lib/tenant.js'
 
-// Combines what were api/review-queue.ts (list) and api/review-decide.ts
-// (approve/reject) -- see api/tenant.ts for why (Vercel's Hobby plan function
-// count limit). GET is public read, same openness as tenant-record: the
-// queue's existence and status isn't sensitive, only deciding is. POST
-// requires the same write-auth as any other edit.
+// List (GET) and approve/reject (POST) share one function, to stay under the
+// Vercel Hobby plan's 12-function limit. GET is public read, same openness as
+// tenant-record: the queue's existence and status isn't sensitive, only
+// deciding is. POST requires the same write-auth as any other edit.
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method === 'GET') {
     const slug = typeof req.query.slug === 'string' ? req.query.slug : undefined
@@ -51,7 +50,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return
       }
 
-      const auth = await readWriteAuth(req)
+      const auth = readWriteAuth(req)
       if (!auth) {
         res.status(401).json({ error: 'Not authorized to review changes for this business' })
         return
@@ -63,8 +62,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return
       }
 
-      const decidedBy = auth.kind === 'owner' ? 'Business owner' : 'Business owner (demo)'
-      await decideReviewItem(tenant, reviewId, decision, decidedBy)
+      await decideReviewItem(tenant, reviewId, decision, 'Business owner (demo)')
       res.status(200).json({ ok: true })
     } catch (error) {
       if (error instanceof Error && error.message === 'This item has already been decided.') {

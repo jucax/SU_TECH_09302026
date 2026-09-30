@@ -5,8 +5,7 @@ import type { ChangeSet, VerifiedRecord } from '../schemas.js'
 
 // Turns a plain-language instruction ("change the brake rotor to $54.99 and
 // mark it low stock") into the ChangeSet shape apply-change.ts can write to
-// Supabase. Used by both the M7 dashboard edit box and (reused, not
-// reimplemented) the M11 setup wizard's structuring step.
+// Supabase. Used by the dashboard's "Update with OneBridge AI" box.
 //
 // Two-step by design: Claude identifies products/hours/policies BY NAME
 // (it has no reason to know internal UUIDs, and forcing it to invent one

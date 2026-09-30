@@ -1,31 +1,14 @@
 import { getServiceClient } from './db.js'
+import type { ActivitySummary } from './schemas.js'
 import type { TenantRow } from './tenant.js'
 
 // Real, queryable activity for one tenant: MCP traffic, how recently the
 // record was actually touched, what's been applied and by what path, and the
-// accuracy trend from M8 monitoring runs. Deliberately does not report an
+// accuracy trend from monitoring runs. Deliberately does not report an
 // "inconsistencies resolved" count: nothing here links a detected mismatch to
 // a specific fix, so a resolved-count would be invented, not measured. The
-// detect -> fix -> recheck story is told by the timeline of real events
-// below, not by a synthetic aggregate.
-
-export interface AccuracyTrendPoint {
-  createdAt: string
-  accuracyScore: number
-}
-
-export interface ActivitySummary {
-  mcpRequestCount: number
-  mcpRequestsByTool: Record<string, number>
-  lastUpdatedAt: string
-  updatesApplied: number
-  updatesBySource: Record<string, number>
-  reviewCounts: { pending: number; approved: number; rejected: number }
-  monitorRunCount: number
-  latestAccuracyScore: number | null
-  latestMismatches: number | null
-  accuracyTrend: AccuracyTrendPoint[]
-}
+// detect, fix, recheck story is told by the timeline of real events below,
+// not by a synthetic aggregate.
 
 interface StoredDiffResult {
   mismatches: number
@@ -74,7 +57,7 @@ export async function getActivitySummary(tenant: TenantRow): Promise<ActivitySum
     else if (row.status === 'rejected') reviewCounts.rejected++
   }
 
-  const accuracyTrend: AccuracyTrendPoint[] = monitorRes.data.map((row) => ({
+  const accuracyTrend: ActivitySummary['accuracyTrend'] = monitorRes.data.map((row) => ({
     createdAt: row.created_at,
     accuracyScore: row.accuracy_score,
   }))

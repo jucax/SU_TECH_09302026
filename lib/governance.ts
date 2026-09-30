@@ -1,12 +1,12 @@
 import { getServiceClient } from './db.js'
-import type { ChangeSet, VerifiedRecord } from './schemas.js'
+import type { ChangeSet, ReviewQueueItem, VerifiedRecord } from './schemas.js'
 import { applyChangeSet, type TenantRow } from './tenant.js'
 
 // The ethics/governance component the case prompt requires: which changes
 // apply automatically, which need a person, and who is accountable. Routing
-// is deterministic code, never a model call -- see the M8 gap review's
-// explicit warning that "model output must not authorize writes or override
-// deterministic rules." A model can explain a decision; it does not make one.
+// is deterministic code, never a model call: model output must not authorize
+// writes or override deterministic rules. A model can explain a decision; it
+// does not make one.
 
 export type GovernanceRouting = 'auto_sync' | 'review'
 
@@ -44,19 +44,6 @@ export function evaluateChangeSet(
   }
 
   return { routing: 'auto_sync', ruleTriggered: 'routine' }
-}
-
-export interface ReviewQueueItem {
-  id: string
-  tenantId: string
-  summary: string
-  rawInstruction: string | null
-  changeSet: ChangeSet
-  ruleTriggered: string
-  status: 'pending' | 'approved' | 'rejected'
-  decidedBy: string | null
-  decidedAt: string | null
-  createdAt: string
 }
 
 interface ReviewQueueRow {

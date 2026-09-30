@@ -19,7 +19,7 @@ export function formatDayOfWeek(day: number): string {
   return DAY_NAMES[day] ?? 'Unknown'
 }
 
-export function formatTime(time: string | null): string {
+function formatTime(time: string | null): string {
   if (!time) return ''
   const [hourStr, minuteStr] = time.split(':')
   const hour = Number(hourStr)
@@ -30,8 +30,8 @@ export function formatTime(time: string | null): string {
 
 // Used by lib/generate/site.ts before interpolating owner-supplied text into
 // HTML. Business names, product descriptions, and policy text all eventually
-// come from an owner (directly, or via the AI structuring step in M7/M11), so
-// none of it can be trusted as safe markup.
+// come from an owner (directly, or via the AI structuring step), so none of
+// it can be trusted as safe markup.
 const HTML_ESCAPES: Record<string, string> = {
   '&': '&amp;',
   '<': '&lt;',

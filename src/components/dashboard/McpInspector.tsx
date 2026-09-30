@@ -26,9 +26,9 @@ const fieldHelp: Record<string, string> = {
 
 const tools = [
   { name: 'getBusinessProfile', title: 'Know your business', description: 'Reads your business name, identifier, and opening hours.', input: 'No input required.' },
-  { name: 'listProducts', title: 'Explore your catalog', description: 'Reads descriptions, prices, stock, and listed compatibility. An optional search matches product names, descriptions, or compatibility.', input: 'Optional: query — a product or vehicle search term.' },
-  { name: 'checkAvailability', title: 'Check a specific part', description: 'Reads the approved price and stock for an exact or unique product match. Multiple matches are returned for clarification.', input: 'Required: productName — the product to check.' },
-  { name: 'getPolicies', title: 'Understand your policies', description: 'Reads your returns, pickup, warranty, and other published policies.', input: 'Optional: kind — a policy type, such as returns.' },
+  { name: 'listProducts', title: 'Explore your catalog', description: 'Reads descriptions, prices, stock, and listed compatibility. An optional search matches product names, descriptions, or compatibility.', input: 'Optional: query (a product or vehicle search term).' },
+  { name: 'checkAvailability', title: 'Check a specific part', description: 'Reads the approved price and stock for an exact or unique product match. Multiple matches are returned for clarification.', input: 'Required: productName (the product to check).' },
+  { name: 'getPolicies', title: 'Understand your policies', description: 'Reads your returns, pickup, warranty, and other published policies.', input: 'Optional: kind (a policy type, such as returns).' },
 ]
 
 interface Props {
