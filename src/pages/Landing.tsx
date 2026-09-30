@@ -93,7 +93,7 @@ export function Landing() {
         <section className="ob-hero ob-container" aria-labelledby="hero-title">
           <div className="ob-hero-copy ob-enter">
             <p className="ob-eyebrow"><span className="ob-dot" />THE TRUSTED CONNECTION</p>
-            <h1 id="hero-title">You know your business.<br /><span>Help AI understand it.</span></h1>
+            <h1 id="hero-title">Your business, told right.<br /><span>To people and to AI.</span></h1>
             <p className="ob-hero-description">
               Make trusted business information easier to access in AI-assisted shopping, and help customers make better choices. OneBridge connects business-approved facts to a website for people and an MCP connection for compatible AI assistants.
             </p>
