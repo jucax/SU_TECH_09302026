@@ -1,4 +1,14 @@
 {
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2023"],
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noFallthroughCasesInSwitch": true
+  },
   "files": [],
   "references": [
     { "path": "./tsconfig.app.json" },
