@@ -4,10 +4,8 @@ import {
   Activity,
   ArrowUpRight,
   ClipboardCheck,
-  Globe,
   LayoutDashboard,
   Package,
-  Server,
   Settings,
   type LucideIcon,
 } from 'lucide-react'
@@ -28,16 +26,14 @@ function navItems(slug: string | null): NavItem[] {
   return [
     { label: 'Dashboard', icon: LayoutDashboard, to: `/dashboard${q}`, end: true },
     { label: 'Products', icon: Package, to: `/dashboard/products${q}` },
-    { label: 'Website', icon: Globe, href: slug ? `/site/${slug}` : undefined },
-    { label: 'MCP servers', icon: Server, to: `/dashboard/mcp${q}` },
-    { label: 'Analytics', icon: Activity, to: `/dashboard/monitoring${q}` },
+    { label: 'Analytics', icon: Activity, to: `/dashboard/analytics${q}` },
     { label: 'Review queue', icon: ClipboardCheck, to: `/dashboard/review${q}` },
     { label: 'Settings', icon: Settings, to: `/dashboard/settings${q}` },
   ]
 }
 
 const itemBase =
-  'flex min-h-[44px] items-center gap-3 rounded-[10px] px-3 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue focus-visible:ring-offset-2'
+  'flex min-h-[44px] items-center gap-3 whitespace-nowrap rounded-[10px] px-3 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue focus-visible:ring-offset-2'
 
 function NavEntry({ item, pendingReview }: { item: NavItem; pendingReview: number }) {
   const Icon = item.icon

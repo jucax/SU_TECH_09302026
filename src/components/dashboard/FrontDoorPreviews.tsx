@@ -6,8 +6,6 @@ import { cn } from '@/lib/utils'
 import { formatPriceCents } from '@lib/format'
 import type { Product } from '@lib/schemas'
 
-export type EditTarget = 'website' | 'mcp'
-
 // Phases the frontend can actually observe: structure call, apply call, then
 // the record refetch. "done" only lasts long enough to flash the new values.
 export type UpdatePhase = 'idle' | 'understanding' | 'applying' | 'refreshing' | 'done'
@@ -25,8 +23,7 @@ interface PreviewProps {
   businessName: string
   slug: string
   phase: UpdatePhase
-  selected: EditTarget
-  onEdit: (target: EditTarget) => void
+  onEdit: () => void
 }
 
 function PhaseBar({ phase }: { phase: UpdatePhase }) {
@@ -52,18 +49,17 @@ function PhaseBar({ phase }: { phase: UpdatePhase }) {
   )
 }
 
-function cardRing(selected: boolean, phase: UpdatePhase) {
+function cardRing(phase: UpdatePhase) {
   return cn(
-    'flex flex-col gap-3 p-5 transition-shadow duration-300',
-    selected && 'ring-2 ring-action-blue/40',
+    'flex h-full flex-col gap-3 p-5 transition-shadow duration-300',
     phase === 'done' && 'motion-safe:shadow-[0_0_0_4px_rgba(22,101,52,0.15)]',
   )
 }
 
-export function WebsitePreview({ product, businessName, slug, phase, selected, onEdit }: PreviewProps) {
+export function WebsitePreview({ product, businessName, slug, phase, onEdit }: PreviewProps) {
   const done = phase === 'done'
   return (
-    <Card className={cardRing(selected === 'website', phase)}>
+    <Card className={cardRing(phase)}>
       <header className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <Globe size={22} aria-hidden="true" className="text-action-blue" />
@@ -81,14 +77,14 @@ export function WebsitePreview({ product, businessName, slug, phase, selected, o
       </header>
 
       {/* Lightweight HTML mini-preview built from the same record, not an iframe. */}
-      <div className="overflow-hidden rounded-[10px] border border-border bg-white">
+      <div className="h-[184px] overflow-hidden rounded-[10px] border border-border bg-white">
         <div className="flex items-center gap-1.5 border-b border-border bg-gray px-3 py-2">
           <span className="h-2 w-2 rounded-full bg-border" />
           <span className="h-2 w-2 rounded-full bg-border" />
           <span className="h-2 w-2 rounded-full bg-border" />
           <span className="ml-2 truncate text-[11px] text-secondary">/site/{slug}</span>
         </div>
-        <div className="flex min-h-[132px] flex-col gap-2 p-4">
+        <div className="flex h-[132px] flex-col gap-2 p-4">
           <p className="text-xs font-semibold text-secondary">{businessName}</p>
           {product ? (
             <>
@@ -111,19 +107,21 @@ export function WebsitePreview({ product, businessName, slug, phase, selected, o
         </div>
       </div>
 
-      <PhaseBar phase={selected === 'website' ? phase : phase === 'idle' ? 'idle' : 'refreshing'} />
+      <div className="mt-auto flex flex-col gap-2">
+      <PhaseBar phase={phase} />
       <button
         type="button"
-        onClick={() => onEdit('website')}
+        onClick={onEdit}
         className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-[10px] border border-border bg-white px-4 text-sm font-semibold text-navy hover:bg-subtle-blue focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue focus-visible:ring-offset-2"
       >
         <Pencil size={16} aria-hidden="true" /> Edit with AI
       </button>
+      </div>
     </Card>
   )
 }
 
-export function McpPreview({ product, slug, phase, selected, onEdit }: PreviewProps) {
+export function McpPreview({ product, slug, phase, onEdit }: PreviewProps) {
   const [copied, setCopied] = useState<'ok' | 'fail' | null>(null)
   const endpoint = `${window.location.origin}/site/${slug}/mcp`
   const done = phase === 'done'
@@ -154,7 +152,7 @@ export function McpPreview({ product, slug, phase, selected, onEdit }: PreviewPr
   }
 
   return (
-    <Card className={cardRing(selected === 'mcp', phase)}>
+    <Card className={cardRing(phase)}>
       <header className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <Server size={22} aria-hidden="true" className="text-action-blue" />
@@ -174,7 +172,7 @@ export function McpPreview({ product, slug, phase, selected, onEdit }: PreviewPr
         </button>
       </header>
 
-      <div className="flex min-h-[176px] flex-col overflow-hidden rounded-[10px] bg-navy">
+      <div className="flex h-[184px] flex-col overflow-hidden rounded-[10px] bg-navy">
         <p className="border-b border-white/10 px-3 py-2 text-[11px] text-white/60">
           Approved data preview
         </p>
@@ -192,18 +190,20 @@ export function McpPreview({ product, slug, phase, selected, onEdit }: PreviewPr
         )}
       </div>
 
-      <p className="min-h-4 break-all text-[11px] text-secondary" role="status">
+      <p className="line-clamp-1 break-all text-[11px] text-secondary" role="status">
         {copied === 'fail' ? 'Could not copy. Select the URL manually.' : endpoint}
       </p>
 
-      <PhaseBar phase={selected === 'mcp' ? phase : phase === 'idle' ? 'idle' : 'refreshing'} />
+      <div className="mt-auto flex flex-col gap-2">
+      <PhaseBar phase={phase} />
       <button
         type="button"
-        onClick={() => onEdit('mcp')}
+        onClick={onEdit}
         className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-[10px] border border-border bg-white px-4 text-sm font-semibold text-navy hover:bg-subtle-blue focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue focus-visible:ring-offset-2"
       >
         <Pencil size={16} aria-hidden="true" /> Edit with AI
       </button>
+      </div>
     </Card>
   )
 }

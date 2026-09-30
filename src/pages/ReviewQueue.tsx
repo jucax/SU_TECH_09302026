@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 
+import { DashboardLayout } from '@/components/dashboard/DashboardLayout'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
@@ -90,7 +91,7 @@ export function ReviewQueue() {
   const decided = items.filter((i) => i.status !== 'pending')
 
   return (
-    <main className="min-h-screen bg-gray px-4 py-12">
+    <DashboardLayout slug={slug}>
       <div className="mx-auto flex max-w-3xl flex-col gap-6">
         <div>
           <p className="text-sm font-semibold text-action-blue">Governance</p>
@@ -183,6 +184,6 @@ export function ReviewQueue() {
           </CardContent>
         </Card>
       </div>
-    </main>
+    </DashboardLayout>
   )
 }
