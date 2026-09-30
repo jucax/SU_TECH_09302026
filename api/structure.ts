@@ -1,12 +1,12 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 
+import { AI_NOT_ENABLED_MESSAGE, isAiConfigured } from '../lib/ai/config.js'
 import { UnrecognizedInstructionError, structureInstruction } from '../lib/ai/structure.js'
 import { getTenantBySlug, getVerifiedRecord } from '../lib/tenant.js'
 
 // Turns a plain-language instruction into a change set, but does not apply
-// it -- that's api/apply-change.ts. Kept separate so M9 can insert a
-// governance decision between "here's the proposed change" and "here's what
-// actually happened to the data".
+// it; api/apply-change.ts does that. Kept separate so governance sits between
+// "here's the proposed change" and "here's what actually happened to the data".
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
     res.status(405).json({ error: 'Method not allowed' })
@@ -16,6 +16,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const { slug, instruction } = req.body ?? {}
   if (typeof slug !== 'string' || typeof instruction !== 'string' || !instruction.trim()) {
     res.status(400).json({ error: 'Missing slug or instruction' })
+    return
+  }
+
+  if (!isAiConfigured()) {
+    res.status(503).json({ error: AI_NOT_ENABLED_MESSAGE })
     return
   }
 

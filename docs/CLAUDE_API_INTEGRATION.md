@@ -2,6 +2,8 @@
 
 ## Purpose and status
 
+**Current status:** the code paths described here are built (`lib/ai/`, `api/structure.ts`, `api/monitor.ts`) but not enabled in the hosted demo, which runs without a Claude API key. The product shows these features as not enabled rather than failing. See the [README](../README.md), Section 3. The rest of this document is the original design.
+
 This document explains how paid Claude API calls support the existing [PoC build plan](PLAN.md). It is an implementation companion, not a replacement plan. The M1 through M12 sequence, architecture, priorities, cut order, and scope in `PLAN.md` remain authoritative.
 
 The proposed capability is real AI-assisted structuring of business information through the hosted OneBridge interface. A visitor submits supported input, a Vercel function calls Claude, and OneBridge presents a validated proposal for owner confirmation or governance review. The verified Supabase record then supplies the business website and its MCP endpoint.

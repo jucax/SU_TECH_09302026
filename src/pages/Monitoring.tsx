@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { useAiEnabled } from '@/lib/aiStatus'
 import { useTenantSlug } from '@/lib/tenantSession'
 import type { VerifiedRecord } from '@lib/schemas'
 
@@ -93,6 +94,7 @@ function DiffTable({ diff }: { diff: ClaimDiffResult }) {
 
 export function Monitoring() {
   const slug = useTenantSlug()
+  const aiEnabled = useAiEnabled()
   const [record, setRecord] = useState<VerifiedRecord | null>(null)
   const [prompt, setPrompt] = useState('')
   const [running, setRunning] = useState(false)
@@ -116,7 +118,7 @@ export function Monitoring() {
   }, [slug])
 
   async function runComparison() {
-    if (!slug || !prompt.trim()) return
+    if (!slug || !prompt.trim() || !aiEnabled) return
     setRunning(true)
     setRunError(null)
     setResult(null)
@@ -170,9 +172,17 @@ export function Monitoring() {
           </p>
         </div>
 
+        {aiEnabled === false && (
+          <div className="rounded-lg border border-review/30 bg-review-surface px-4 py-3 text-sm text-review">
+            Not enabled in this hosted demo. The live check needs a Claude API key on the server,
+            and this demo runs without an AI account. The Test tab shows how the comparison works,
+            using scripted answers scored against this business's approved record.
+          </div>
+        )}
+
         <Card>
           <CardContent className="pt-6 text-sm text-secondary">
-            Both panels below ask <span className="font-semibold text-navy">claude-sonnet-5</span> the
+            When enabled, both panels below ask <span className="font-semibold text-navy">claude-sonnet-5</span> the
             exact same question, with the exact same settings, in parallel API calls. The only
             difference is whether this business's MCP server is attached. The "with MCP" panel makes
             real tool calls against this business's live MCP endpoint, and every call it makes is
@@ -194,7 +204,11 @@ export function Monitoring() {
                 className="flex-1 rounded-[10px] border border-border px-4 py-2 text-sm text-navy focus:outline-none focus:ring-2 focus:ring-action-blue"
                 disabled={running}
               />
-              <Button variant="action" onClick={runComparison} disabled={running || !prompt.trim()}>
+              <Button
+                variant="action"
+                onClick={runComparison}
+                disabled={running || !prompt.trim() || aiEnabled !== true}
+              >
                 {running ? 'Running...' : 'Run comparison'}
               </Button>
             </div>

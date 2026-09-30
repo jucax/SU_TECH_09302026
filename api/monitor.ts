@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import Anthropic from '@anthropic-ai/sdk'
 
+import { isAiConfigured } from '../lib/ai/config.js'
 import { extractClaims } from '../lib/ai/extractClaims.js'
 import { getServiceClient } from '../lib/db.js'
 import { diffClaims } from '../lib/diff.js'
@@ -11,14 +12,13 @@ const MODEL = 'claude-sonnet-5'
 const MAX_TOKENS = 1024
 const MCP_BETA = 'mcp-client-2026-09-15'
 
-// The M8 comparison: the same model, prompt, and max_tokens, asked twice --
-// once with no tools at all, once with this tenant's real MCP server attached
+// The accuracy check: the same model, prompt, and max_tokens, asked twice.
+// Once with no tools at all, once with this tenant's real MCP server attached
 // via Anthropic's MCP connector (so "with MCP" is an actual live tool call
 // against our own deployed endpoint, not a simulation; every call it makes
 // lands in mcp_requests_log same as any other MCP client). The ONLY variable
-// between the two branches is mcp_servers. See docs/PLAN.md
-// "Comparison fairness" -- this must stay true here, not just be claimed on
-// the results page.
+// between the two branches is mcp_servers. This must stay true here, not
+// just be claimed on the results page.
 
 interface McpToolUseBlock {
   type: 'mcp_tool_use'
@@ -47,6 +47,11 @@ function extractText(content: ReadonlyArray<{ type: string }>): string {
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  // GET reports whether the check can run here, so the UI can say so up front.
+  if (req.method === 'GET') {
+    res.status(200).json({ enabled: isAiConfigured() })
+    return
+  }
   if (req.method !== 'POST') {
     res.status(405).json({ error: 'Method not allowed' })
     return
@@ -60,7 +65,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey) {
-    res.status(500).json({ error: 'ANTHROPIC_API_KEY must be set (Vercel project env var).' })
+    res.status(503).json({ error: 'The live accuracy check is not enabled in this hosted demo.' })
     return
   }
 

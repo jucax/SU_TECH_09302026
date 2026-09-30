@@ -5,6 +5,7 @@ import { DashboardLayout } from '@/components/dashboard/DashboardLayout'
 import { useTenantData } from '@/components/dashboard/useTenantData'
 import { Button } from '@/components/ui/button'
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { useAiEnabled } from '@/lib/aiStatus'
 import { cn } from '@/lib/utils'
 import { formatHoursEntry, formatPriceCents } from '@lib/format'
 import type { VerifiedRecord } from '@lib/schemas'
@@ -181,6 +182,7 @@ function Panel({ title, tone, side }: { title: string; tone: 'plain' | 'mcp'; si
 
 export function DashboardTest() {
   const { slug, record, activity, error } = useTenantData()
+  const aiEnabled = useAiEnabled()
   const scenarios = useMemo(() => (record ? buildScenarios(record) : []), [record])
   const [selected, setSelected] = useState(0)
   const [step, setStep] = useState<number | null>(null)
@@ -357,17 +359,24 @@ export function DashboardTest() {
         )}
 
         <Card className="flex flex-col gap-2 p-5">
-          <h2 className="text-base font-bold text-navy">Run it for real</h2>
+          <h2 className="text-base font-bold text-navy">The live version</h2>
           <p className="text-sm text-secondary">
             The live check sends the question to an actual AI model twice and records what it says.
-            It needs an AI account, so it is not part of the simulated example above.
+            It needs a Claude API key on the server, so it is not part of the simulated example
+            above.
           </p>
-          <a
-            href={`/dashboard/monitoring${q}`}
-            className="inline-flex items-center gap-1 text-sm font-semibold text-action-blue underline underline-offset-4"
-          >
-            Open the live accuracy check <ArrowRight size={14} aria-hidden="true" />
-          </a>
+          {aiEnabled ? (
+            <a
+              href={`/dashboard/monitoring${q}`}
+              className="inline-flex items-center gap-1 text-sm font-semibold text-action-blue underline underline-offset-4"
+            >
+              Open the live accuracy check <ArrowRight size={14} aria-hidden="true" />
+            </a>
+          ) : aiEnabled === false ? (
+            <p className="text-sm text-secondary">
+              It is built but not enabled in this hosted demo, which runs without an AI account.
+            </p>
+          ) : null}
         </Card>
       </div>
     </DashboardLayout>

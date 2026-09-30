@@ -42,11 +42,11 @@ Both front doors read the same record, so they cannot drift apart. The owner nev
 
 **The story used throughout the demo.** Jorge owns a local auto-parts shop. He has a spreadsheet, a typed sheet of hours and policies, and an old website. Maria, his customer, needs the right brake rotor. OneBridge gives her accurate, current answers from Jorge's approved data, whether she uses his website or a supported AI assistant.
 
-The case asks for a way to stay accurately represented in AI-assisted shopping, with an ethics and governance component. The prototype concentrates on three things a judge can verify:
+The case asks for a way to stay accurately represented in AI-assisted shopping, with an ethics and governance component. The prototype concentrates on three things:
 
-1. **A real MCP server** serves a business's approved data to an AI client.
-2. **An accuracy check** compares what an AI model says with and without that MCP server against the business's own facts.
-3. **A governance layer** separates changes that apply automatically from changes that need a person, and records the decisions.
+1. **A real MCP server** serves a business's approved data to an AI client. A judge can connect to it directly.
+2. **An accuracy check** compares what an AI model says with and without that MCP server against the business's own facts. The code is complete, but the hosted demo runs without an AI account, so a judge sees it through a scripted example on the Test page (Section 3).
+3. **A governance layer** separates changes that apply automatically from changes that need a person, and records the decisions. A judge can use it end to end.
 
 ## 2. Quick 5-minute path
 
@@ -56,13 +56,13 @@ No account or sign-in is needed. Every demo run creates a private sandbox copy o
 2. Follow the guided demo to the end (Sections 4.2 to 4.4). Click **Bridge** to publish Jorge's business.
 3. Click **Go to the dashboard**. Open the website preview, then **Inspect AI connection**.
 4. In the update box, click **Apply update** twice. The first change publishes right away. The second is held for review because it is a large price change.
-5. Open **Review queue** and approve the held change. Then open **Test**, and follow "Open the live accuracy check" to run a real comparison.
+5. Open **Review queue** and approve the held change. Then open **Test** to see how the accuracy check scores an AI answer against the approved record.
 
 Every screen is explained in Section 4.
 
 ## 3. What is built, and what is not
 
-Being specific matters more than sounding impressive. **Built** means it works in the hosted prototype. **Illustrative** means the screen or data is an example and is marked as such in the product. **Planned** means it is not built.
+Being specific matters more than sounding impressive. **Built** means it works in the hosted prototype. **Built, not enabled** means the code is complete but switched off in the hosted demo, which runs without an AI account. **Illustrative** means the screen or data is an example and is marked as such in the product. **Planned** means it is not built.
 
 ### Built
 
@@ -71,18 +71,23 @@ Being specific matters more than sounding impressive. **Built** means it works i
 - **Website for People**: server-rendered storefront with catalog search, compatibility, prices, stock, hours, policies, JSON-LD structured data, and links to the AI-readable facts (`lib/generate/site.ts`).
 - **Discovery files**: platform `robots.txt` and `llms.txt`, plus a per-business `llms.txt` listing products, prices, stock, hours, policies, and MCP connection instructions.
 - **MCP Server for AI**: stateless Streamable HTTP endpoint with four read-only tools (`getBusinessProfile`, `listProducts`, `checkAvailability`, `getPolicies`). There are no write, payment, order, or reservation tools. Every call is logged (`api/mcp.ts`).
-- **Plain-language updates**: an instruction is turned into a structured change by Claude, checked against the current record, and applied through governance rules (`lib/ai/structure.ts`, `api/structure.ts`, `api/apply-change.ts`).
 - **Governance rules**: routine changes auto-sync. A new product or a price change of more than 20 percent goes to a **review queue** for a person to approve or reject. Routing is deterministic code, never a model call. Applied changes are written to an audit log in the database, and review decisions appear in the Review queue's audit trail (`lib/governance.ts`, `api/review.ts`).
-- **Accuracy check**: the same question is sent to the same Claude model twice with identical settings, once with no tools and once with the business's live MCP server attached. The answers are broken into factual claims and compared with the approved record (`api/monitor.ts`, `lib/ai/extractClaims.ts`, `lib/diff.ts`).
-- **Owner dashboard**: overview, products, analytics, test, review queue, and settings.
-- **Activity from real events**: MCP tool calls, applied changes, review counts, and accuracy-check results are recorded in the database.
+- **Owner dashboard**: overview, products, analytics, test, review queue, and settings. Hours and policies edited in Settings are saved and published to both front doors.
+- **Activity from real events**: MCP tool calls, applied changes, and review decisions are recorded in the database.
+
+### Built, not enabled in the hosted demo
+
+These need a Claude API key on the server. The hosted demo runs without an AI account, so they are switched off there and the product says so on screen. Setting `ANTHROPIC_API_KEY` turns them on with no code changes.
+
+- **Plain-language updates**: a typed instruction is turned into a structured change by Claude, checked against the current record, and applied through the same governance rules (`lib/ai/structure.ts`, `api/structure.ts`). In the hosted demo, the two preloaded update requests use preset changes instead (Section 4.5), and a typed request gets a message that AI is not enabled.
+- **Live accuracy check**: the same question is sent to the same Claude model twice with identical settings, once with no tools and once with the business's live MCP server attached. The answers are broken into factual claims and compared with the approved record, and each run is stored for the accuracy trend (`api/monitor.ts`, `lib/ai/extractClaims.ts`, `lib/diff.ts`).
 
 ### Illustrative (marked in the product)
 
-- **Analytics charts** for website visits, MCP calls, sales, who is asking, and what customers ask AI about are generated sample data in demo sandboxes and carry a "Sample data" tag. The accuracy trend, last-updated time, review counts, and recorded MCP request counts come from real events.
-- **The Test page example** uses scripted answers built from the business's own record, so it works without an AI account. The live check is the real comparison.
+- **Analytics charts** for website visits, MCP calls, sales, who is asking, what customers ask AI about, and the accuracy trend are generated sample data in demo sandboxes and carry a "Sample data" tag. The last-updated time, review counts, and recorded MCP request counts come from real events.
+- **The Test page example** scripts both AI answers from the business's own record and scores them against the approved record, so it shows how the accuracy check works without an AI account. It does not call an AI model.
 - **Setup extraction in the demo**: Jorge's inventory CSV is really parsed. His hours and policies are the contents of his PDF entered ahead of time, not read from the PDF live. The "reading your files" animation narrates the intended AI-assisted cleaning step. The demo says so on screen.
-- **The demo update box** is preloaded with two requests so a judge only clicks **Apply update** (details in Section 4.5).
+- **The demo update box** is preloaded with two requests so a judge only clicks **Apply update**. Their changes are preset rather than read by an AI model, then go through the real governance rules and database (details in Section 4.5).
 - **Subscription controls** in Settings show the intended plan ($250 setup fee and $149 monthly service fee, with a cancel flow). No billing is connected and nothing is charged.
 
 ### Planned, not built
@@ -144,13 +149,14 @@ The left sidebar has **Dashboard, Products, Analytics, Test, Review queue, and S
 
 The **Dashboard** overview has four parts:
 
-- **Snapshot card** (sales through OneBridge, sample data): with an accuracy figure, how recently the data was updated, and how many changes are in review. The last two come from real activity.
+- **Snapshot card** (sales through OneBridge and an accuracy figure, both sample data): with how recently the data was updated and how many changes are in review. Those two come from real activity.
 - **Website for people** card: a live, scaled-down preview of the generated site. Click it, or the arrow in the header, to open the full site. **Edit with AI** jumps to the update box.
 - **MCP server for AI** card: a preview of the approved data an AI client receives, the connection URL with a copy button, and **Inspect AI connection**. The inspector shows the exact approved record, explains each field, and lists the four tools. It is read-only and does not generate extra activity.
 - **Update box** ("Update with OneBridge AI"): where Jorge describes a change in plain language. In a demo sandbox it is preloaded with two requests, and a judge only clicks **Apply update**:
   1. **A routine price change** (the first product, a brake rotor, from $49.99 to $54.99). It is applied to the website and the MCP data together. The preview highlights the new value.
   2. **A large price increase** (about 30 percent). Because it is more than 20 percent, it is **not published**. A notice explains why and links to the Review queue.
-  - How the scripted step works: the request is sent to Claude first. If Claude's structured result matches the scripted change, that result is used. If it differs or the call fails, the preset change is used so the demo stays reliable. Either way, the change then goes through the real governance check and the real database.
+  - How the preloaded requests work: in the hosted demo, which runs without an AI account, each uses a preset change rather than being read by an AI model. The change then goes through the real governance check and the real database. (With a Claude API key configured, the request is sent to Claude first and its result is used when it matches the scripted change.)
+  - After the two preloaded requests, a typed request gets a message that AI updates are not enabled in the hosted demo. Hours and policies can still be edited directly in Settings.
 - **Performance** section: activity counts and charts, with sample data tagged.
 
 ### 4.6 Review queue (`/dashboard/review`)
@@ -170,7 +176,7 @@ The **Dashboard** overview has four parts:
 How people and AI assistants use the information, and how accurate it stays.
 
 - **Key indicators**, **visits and AI calls over 30 days**, **who is asking**, **sales through OneBridge**, and **what customers ask AI about**: sample data, each tagged "Sample data".
-- **Recorded MCP requests** and the **accuracy trend** come from real events. Until an accuracy check has run, it says "No checks yet."
+- **Recorded MCP requests** come from real events. The **accuracy trend** is sample data in demo sandboxes, tagged as such, because live checks are not enabled in the hosted demo.
 
 ### 4.9 Test (`/dashboard/test`)
 
@@ -178,16 +184,17 @@ A scripted illustration of how the accuracy check works, so it can be tried with
 
 - **What this test does**: four steps. Ask twice (same model, same question, with and without the MCP server). Collect the facts stated. Compare each fact with the approved record. Score how many were right.
 - **Try it**: pick a customer-style question and run it. The two answers appear side by side with each fact marked as a match, a mismatch, or not stated.
-- **What it shows and does not show**: it shows whether an assistant connected to the MCP server gets the facts right. It does not show that ChatGPT, Claude, or Gemini will find or recommend the business on their own.
-- **Run it for real** links to the live check.
+- **What it shows and does not show**: the check shows whether an assistant connected to the MCP server gets the facts right. It does not show that ChatGPT, Claude, or Gemini will find or recommend the business on their own.
+- **The live version** explains that the real check needs a Claude API key and is not enabled in this hosted demo.
 
-### 4.10 Live accuracy check (`/dashboard/monitoring`)
+### 4.10 Live accuracy check (`/dashboard/monitoring`, not enabled in the hosted demo)
 
-The real comparison. Type any customer question and click **Run comparison**. The same Claude model answers twice with the same settings. One answer cannot use the business's tools. The other can call the business's live MCP endpoint, and those calls are logged like any other MCP client's. The answers are turned into factual claims and scored against the approved record. Each run is saved and feeds the accuracy trend. This needs the server's Anthropic account, so it stops working if the prepaid balance runs out.
+The code for the real comparison is complete, but the hosted demo runs without an AI account, so this page shows a notice and its **Run comparison** button is disabled. With a Claude API key configured: type any customer question and click **Run comparison**. The same Claude model answers twice with the same settings. One answer cannot use the business's tools. The other can call the business's live MCP endpoint, and those calls are logged like any other MCP client's. The answers are turned into factual claims and scored against the approved record. Each run is saved and feeds the accuracy trend.
 
 ### 4.11 Settings (`/dashboard/settings`)
 
-- **Business profile**, **business hours**, and **policies**: view and edit the approved information.
+- **Business hours** and **policies**: view and edit. Saved changes are published to the website and the MCP data.
+- **Business profile**: view the name, website address, and MCP endpoint. Editing the name changes the dashboard display only, and the page says so.
 - **Plan**: shows the subscription (sample data, no billing connected) and a cancel or reactivate flow that only changes what is shown.
 
 ### 4.12 What AI systems see (`/site/<business>/llms.txt`, `/llms.txt`, `/robots.txt`)
@@ -202,11 +209,11 @@ Plain-text files that describe the business and the platform to AI systems. The 
 | Back end | Vercel serverless functions in `api/` (Node 22, TypeScript) |
 | Data | Supabase (Postgres) with row-level security on every table |
 | Protocol | Model Context Protocol via `@modelcontextprotocol/sdk` (Streamable HTTP) |
-| AI | Anthropic Claude via `@anthropic-ai/sdk`, model `claude-sonnet-5` |
+| AI | Anthropic Claude via `@anthropic-ai/sdk`, model `claude-sonnet-5` (built, not enabled in the hosted demo) |
 | Validation | Zod schemas shared by the client and server (`lib/schemas.ts`) |
 | Hosting | Vercel, with production builds from `main` |
 
-Where AI is used, and where it is deliberately not:
+Where AI is designed to be used, and where it is deliberately not. The three "Yes" rows are the features that need a Claude API key and are not enabled in the hosted demo; everything a judge uses there runs without an AI model.
 
 | Task | Uses AI? | Why |
 | --- | --- | --- |
@@ -232,7 +239,7 @@ Business information (CSV, PDF, old website, owner input)
         ├──►  Business facts         GET  /site/<slug>/llms.txt
         └──►  MCP Server for AI      POST /site/<slug>/mcp
 
-Owner dashboard
+Owner dashboard (Claude step needs an API key; the hosted demo uses preset changes)
    plain-language edit ─► Claude proposes a change ─► governance rules
         ├─ routine ───► applied, written to the audit log
         └─ material ──► review queue ─► person approves or rejects ─► applied
@@ -267,7 +274,7 @@ This addresses the ethics and governance requirement in the case.
 - **Accountability.** The business owner is accountable for the approved record. Applied changes store what changed, the original instruction, and the source. Review decisions store who decided and when.
 - **Honest limits on what the AI can do.** A model can propose a change or explain a decision. It cannot authorize a write. All MCP tools are read-only.
 - **Uncertainty is shown, not hidden.** Missing compatibility is reported as unknown. Ambiguous product matches ask for clarification instead of guessing. Product images on the storefront are illustrations and are labeled so.
-- **Measuring accuracy.** The accuracy check compares claims in an AI answer with the approved record and reports how many verifiable claims were correct. Runs are stored, so the dashboard can show a trend.
+- **Measuring accuracy.** The accuracy check is designed to compare claims in an AI answer with the approved record and report how many verifiable claims were correct, storing each run so the dashboard can show a trend. It is not enabled in the hosted demo; the Test page illustrates it with scripted answers.
 
 ## 8. Limitations
 
@@ -278,7 +285,7 @@ This addresses the ethics and governance requirement in the case.
 - **Prototype scale.** This is a hosted proof of concept with example data (Jorge's Auto Parts). It has not been load tested or independently security audited.
 - **Audit log viewing.** Applied changes are recorded in the database, and review decisions are shown in the Review queue's audit trail. There is no single viewer for every applied change yet.
 - **Demo sandboxes** are anonymous and protected by a per-session cookie, not by user accounts.
-- **Live AI features** (plain-language updates and the accuracy check) need an Anthropic account on the server. If the prepaid balance runs out, those features stop while the rest of the site keeps working.
+- **Live AI features are not enabled in the hosted demo.** Plain-language updates and the live accuracy check are built but need a Claude API key on the server, and the hosted demo runs without an AI account. Nothing in the 5-minute path depends on them. No results from live AI runs are claimed.
 
 ## 9. Sources and credits
 
