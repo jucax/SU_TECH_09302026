@@ -269,7 +269,7 @@ export function Dashboard() {
           <CardHeader>
             <CardTitle>No business loaded</CardTitle>
             <CardDescription>
-              Go back to the landing page and click "See it work" to load Jorge's Auto Parts into a
+              Go back to the landing page and click "See a live demo" to load Jorge's Auto Parts into a
               private sandbox.
             </CardDescription>
           </CardHeader>

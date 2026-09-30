@@ -457,7 +457,7 @@ export function Demo() {
                   </a>
                   <button
                     type="button"
-                    onClick={() => navigate(`/dashboard?slug=${encodeURIComponent(slug)}#mcp`)}
+                    onClick={() => navigate(`/dashboard?slug=${encodeURIComponent(slug)}`)}
                     className="flex flex-col items-center gap-2 rounded-lg border border-action-blue bg-subtle-blue p-4 text-center hover:bg-subtle-blue/70"
                   >
                     <Server className="h-6 w-6 text-action-blue" aria-hidden="true" />
