@@ -1,0 +1,177 @@
+import { useCallback, useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
+
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+
+const LAST_TENANT_KEY = 'onebridge:lastTenantSlug'
+
+interface ReviewQueueItem {
+  id: string
+  summary: string
+  rawInstruction: string | null
+  ruleTriggered: string
+  status: 'pending' | 'approved' | 'rejected'
+  decidedBy: string | null
+  decidedAt: string | null
+  createdAt: string
+}
+
+const RULE_LABELS: Record<string, string> = {
+  new_product: 'New product',
+  price_delta_over_20pct: 'Price change over 20%',
+  routine: 'Routine',
+}
+
+export function ReviewQueue() {
+  const [searchParams] = useSearchParams()
+  const [slug, setSlug] = useState<string | null>(null)
+  const [items, setItems] = useState<ReviewQueueItem[]>([])
+  const [error, setError] = useState<string | null>(null)
+  const [decidingId, setDecidingId] = useState<string | null>(null)
+
+  useEffect(() => {
+    const fromQuery = searchParams.get('slug')
+    setSlug(fromQuery ?? sessionStorage.getItem(LAST_TENANT_KEY))
+  }, [searchParams])
+
+  const load = useCallback((forSlug: string) => {
+    return fetch(`/api/review-queue?slug=${encodeURIComponent(forSlug)}`)
+      .then(async (res) => {
+        if (!res.ok) throw new Error((await res.json()).error ?? 'Failed to load')
+        return res.json() as Promise<{ items: ReviewQueueItem[] }>
+      })
+      .then((body) => setItems(body.items))
+  }, [])
+
+  useEffect(() => {
+    if (!slug) return
+    load(slug).catch((err) => setError(err.message))
+  }, [slug, load])
+
+  async function decide(id: string, decision: 'approve' | 'reject') {
+    if (!slug) return
+    setDecidingId(id)
+    try {
+      const res = await fetch('/api/review-decide', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slug, reviewId: id, decision }),
+      })
+      const body = await res.json()
+      if (!res.ok) throw new Error(body.error ?? 'Failed to record decision')
+      await load(slug)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong')
+    } finally {
+      setDecidingId(null)
+    }
+  }
+
+  if (!slug) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-gray px-4">
+        <Card className="max-w-md">
+          <CardHeader>
+            <CardTitle>No business loaded</CardTitle>
+            <CardDescription>Go back to the landing page and click "See it work" first.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <a href="/" className="text-sm text-blue underline underline-offset-4">
+              Back to landing
+            </a>
+          </CardContent>
+        </Card>
+      </main>
+    )
+  }
+
+  const pending = items.filter((i) => i.status === 'pending')
+  const decided = items.filter((i) => i.status !== 'pending')
+
+  return (
+    <main className="min-h-screen bg-gray px-4 py-12">
+      <div className="mx-auto flex max-w-3xl flex-col gap-6">
+        <div>
+          <p className="text-sm font-semibold text-blue">Governance</p>
+          <h1 className="text-3xl font-extrabold text-navy">Review queue</h1>
+          <p className="mt-1 text-sm text-navy/60">
+            Routine updates sync automatically. New products and price changes over 20% land here
+            first: the owner decides, and every decision is recorded below.
+          </p>
+        </div>
+
+        {error && <p className="text-sm text-orange">{error}</p>}
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Pending ({pending.length})</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {pending.length === 0 ? (
+              <p className="text-sm text-navy/50">Nothing waiting on a decision.</p>
+            ) : (
+              <ul className="flex flex-col divide-y divide-navy/10">
+                {pending.map((item) => (
+                  <li key={item.id} className="flex flex-col gap-2 py-4">
+                    <div>
+                      <p className="font-semibold text-navy">{item.summary}</p>
+                      <p className="text-sm text-navy/50">
+                        {RULE_LABELS[item.ruleTriggered] ?? item.ruleTriggered}
+                        {item.rawInstruction && ` — "${item.rawInstruction}"`}
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        onClick={() => decide(item.id, 'approve')}
+                        disabled={decidingId === item.id}
+                      >
+                        Approve
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => decide(item.id, 'reject')}
+                        disabled={decidingId === item.id}
+                      >
+                        Reject
+                      </Button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Audit trail</CardTitle>
+            <CardDescription>Every decision, who made it, and when.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {decided.length === 0 ? (
+              <p className="text-sm text-navy/50">No decisions yet.</p>
+            ) : (
+              <ul className="flex flex-col divide-y divide-navy/10">
+                {decided.map((item) => (
+                  <li key={item.id} className="py-3">
+                    <p className="text-navy">{item.summary}</p>
+                    <p className="text-sm text-navy/50">
+                      <span className={item.status === 'approved' ? 'text-blue' : 'text-orange'}>
+                        {item.status}
+                      </span>{' '}
+                      by {item.decidedBy} &middot;{' '}
+                      {item.decidedAt && new Date(item.decidedAt).toLocaleString()}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </main>
+  )
+}

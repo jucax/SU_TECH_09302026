@@ -4,6 +4,7 @@ import { Dashboard } from '@/pages/Dashboard'
 import { Landing } from '@/pages/Landing'
 import { Monitoring } from '@/pages/Monitoring'
 import { Placeholder } from '@/pages/Placeholder'
+import { ReviewQueue } from '@/pages/ReviewQueue'
 
 function App() {
   return (
@@ -14,10 +15,7 @@ function App() {
       <Route path="/setup" element={<Placeholder title="Setup wizard" slice="M11" />} />
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/dashboard/monitoring" element={<Monitoring />} />
-      <Route
-        path="/dashboard/review"
-        element={<Placeholder title="Governance review queue" slice="M9" />}
-      />
+      <Route path="/dashboard/review" element={<ReviewQueue />} />
       <Route path="*" element={<Placeholder title="Not found" slice="-" />} />
     </Routes>
   )

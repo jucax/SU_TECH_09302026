@@ -17,7 +17,8 @@ export function Dashboard() {
   const [instruction, setInstruction] = useState('')
   const [applying, setApplying] = useState(false)
   const [editError, setEditError] = useState<string | null>(null)
-  const [lastApplied, setLastApplied] = useState<string | null>(null)
+  const [resultMessage, setResultMessage] = useState<string | null>(null)
+  const [heldForReview, setHeldForReview] = useState(false)
 
   useEffect(() => {
     const fromQuery = searchParams.get('slug')
@@ -46,7 +47,8 @@ export function Dashboard() {
     if (!slug || !instruction.trim()) return
     setApplying(true)
     setEditError(null)
-    setLastApplied(null)
+    setResultMessage(null)
+    setHeldForReview(false)
 
     try {
       const structureRes = await fetch('/api/structure', {
@@ -67,8 +69,13 @@ export function Dashboard() {
       const applyBody = await applyRes.json()
       if (!applyRes.ok) throw new Error(applyBody.error ?? 'Could not apply that change')
 
-      await loadRecord(slug)
-      setLastApplied(summary)
+      if (applyBody.routing === 'review') {
+        setHeldForReview(true)
+        setResultMessage(`Held for owner review (${applyBody.ruleTriggered}): ${summary}`)
+      } else {
+        await loadRecord(slug)
+        setResultMessage(`Applied: ${summary}`)
+      }
       setInstruction('')
     } catch (err) {
       setEditError(err instanceof Error ? err.message : 'Something went wrong')
@@ -151,7 +158,22 @@ export function Dashboard() {
               </Button>
             </div>
             {editError && <p className="mt-2 text-sm text-orange">{editError}</p>}
-            {lastApplied && <p className="mt-2 text-sm text-blue">Applied: {lastApplied}</p>}
+            {resultMessage && (
+              <p className={`mt-2 text-sm ${heldForReview ? 'text-orange' : 'text-blue'}`}>
+                {resultMessage}
+                {heldForReview && slug && (
+                  <>
+                    {' '}
+                    <a
+                      href={`/dashboard/review?slug=${encodeURIComponent(slug)}`}
+                      className="underline underline-offset-4"
+                    >
+                      Go to review queue
+                    </a>
+                  </>
+                )}
+              </p>
+            )}
           </CardContent>
         </Card>
 

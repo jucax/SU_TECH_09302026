@@ -1,26 +1,14 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 
+import { evaluateChangeSet, queueForReview } from '../lib/governance.js'
+import { readDemoAuth } from '../lib/http.js'
 import { changeSetSchema } from '../lib/schemas.js'
-import { applyChangeSet, assertCanWrite, getTenantBySlug, type WriteAuth } from '../lib/tenant.js'
+import { applyChangeSet, assertCanWrite, getTenantBySlug, getVerifiedRecord } from '../lib/tenant.js'
 
 // Applies an already-structured change set (from api/structure.ts) to a
-// tenant. M7 always auto-syncs; M9 will insert a governance check here that
-// routes material changes to the review queue instead of applying them
-// immediately.
-//
-// Auth: the only write-auth path that exists before M11 is the demo secret
-// cookie api/demo-start.ts sets. Registered-owner (Supabase session) auth
-// arrives in M11 and will be added as a second branch here.
-function readDemoAuth(req: VercelRequest): WriteAuth | null {
-  const raw = req.cookies.onebridge_demo
-  if (!raw) return null
-  try {
-    const { secret } = JSON.parse(Buffer.from(raw, 'base64url').toString('utf-8'))
-    return typeof secret === 'string' ? { kind: 'demo', secret } : null
-  } catch {
-    return null
-  }
-}
+// tenant, after a deterministic governance check: routine changes auto-sync,
+// material ones (new product, large price move) go to the review queue
+// instead. See lib/governance.ts for the rule engine.
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
@@ -59,11 +47,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return
     }
 
-    await applyChangeSet(tenant, parsedChangeSet.data, summary, 'owner_edit', {
-      rawInstruction: typeof instruction === 'string' ? instruction : undefined,
-    })
+    const rawInstruction = typeof instruction === 'string' ? instruction : undefined
+    const record = await getVerifiedRecord(tenant)
+    const decision = evaluateChangeSet(parsedChangeSet.data, record)
 
-    res.status(200).json({ ok: true })
+    if (decision.routing === 'review') {
+      const item = await queueForReview(
+        tenant,
+        parsedChangeSet.data,
+        summary,
+        decision.ruleTriggered,
+        rawInstruction,
+      )
+      res.status(200).json({ ok: true, routing: 'review', reviewId: item.id, ruleTriggered: decision.ruleTriggered })
+      return
+    }
+
+    await applyChangeSet(tenant, parsedChangeSet.data, summary, 'owner_edit', { rawInstruction })
+    res.status(200).json({ ok: true, routing: 'auto_sync' })
   } catch (error) {
     console.error('apply-change failed', error)
     res.status(500).json({ error: 'Failed to apply that change' })

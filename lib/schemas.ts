@@ -55,13 +55,30 @@ export const verifiedRecordSchema = z.object({
 })
 export type VerifiedRecord = z.infer<typeof verifiedRecordSchema>
 
+// A patch to one existing product: only the fields actually being changed.
+// Deliberately NOT productSchema.partial() -- Zod fires a field's .default()
+// whenever that key is missing, even under .partial(), so a price-only patch
+// built from productSchema.partial() would silently inject currency: 'USD'
+// and available: true into the change set, and applying it would overwrite
+// availability the caller never mentioned. Every field here is plain
+// optional with no default, so "not provided" reliably stays undefined.
+const productPatchSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string().min(1).optional(),
+  description: z.string().nullable().optional(),
+  priceCents: z.number().int().nonnegative().optional(),
+  currency: z.string().optional(),
+  available: z.boolean().optional(),
+  compatibility: z.string().nullable().optional(),
+})
+
 // A proposed change to a tenant's record, whatever produced it (setup wizard
 // upload, plain-language edit box, or review queue approval). lib/governance.ts
 // decides whether a given change set auto-syncs or needs human review;
 // lib/diff.ts compares a change set (or an AI claim) against the current record.
 export const changeSetSchema = z.object({
   productsCreate: z.array(productSchema.omit({ id: true })).optional(),
-  productsUpdate: z.array(productSchema.partial().required({ id: true })).optional(),
+  productsUpdate: z.array(productPatchSchema).optional(),
   hours: z.array(hoursEntrySchema).optional(),
   policies: z.array(policySchema).optional(),
 })
