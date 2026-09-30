@@ -105,6 +105,16 @@ export async function getVerifiedRecord(tenant: TenantRow): Promise<VerifiedReco
   }
 }
 
+// Every MCP tool call for a tenant logs here. Powers the M10 activity
+// dashboard and is the evidence that the "with MCP" side of the M8
+// monitoring comparison is a real tool connection, not staged.
+export async function logMcpRequest(tenantId: string, toolName: string): Promise<void> {
+  const { error } = await getServiceClient()
+    .from('mcp_requests_log')
+    .insert({ tenant_id: tenantId, tool_name: toolName })
+  if (error) throw error
+}
+
 export async function getCanonicalTenant(): Promise<TenantRow> {
   const { data, error } = await getServiceClient()
     .from('tenants')
