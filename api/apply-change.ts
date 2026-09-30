@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 
 import { evaluateChangeSet, queueForReview } from '../lib/governance.js'
-import { readDemoAuth } from '../lib/http.js'
+import { readWriteAuth } from '../lib/http.js'
 import { changeSetSchema } from '../lib/schemas.js'
 import { applyChangeSet, assertCanWrite, getTenantBySlug, getVerifiedRecord } from '../lib/tenant.js'
 
@@ -35,7 +35,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return
     }
 
-    const auth = readDemoAuth(req)
+    const auth = await readWriteAuth(req)
     if (!auth) {
       res.status(401).json({ error: 'Not authorized to edit this business' })
       return

@@ -2,17 +2,20 @@ import { Route, Routes } from 'react-router-dom'
 
 import { Dashboard } from '@/pages/Dashboard'
 import { Landing } from '@/pages/Landing'
+import { Login } from '@/pages/Login'
 import { Monitoring } from '@/pages/Monitoring'
 import { Placeholder } from '@/pages/Placeholder'
+import { Register } from '@/pages/Register'
 import { ReviewQueue } from '@/pages/ReviewQueue'
+import { Setup } from '@/pages/Setup'
 
 function App() {
   return (
     <Routes>
       <Route path="/" element={<Landing />} />
-      <Route path="/login" element={<Placeholder title="Log in" slice="M11" />} />
-      <Route path="/register" element={<Placeholder title="Set up your business" slice="M11" />} />
-      <Route path="/setup" element={<Placeholder title="Setup wizard" slice="M11" />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      <Route path="/setup" element={<Setup />} />
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/dashboard/monitoring" element={<Monitoring />} />
       <Route path="/dashboard/review" element={<ReviewQueue />} />

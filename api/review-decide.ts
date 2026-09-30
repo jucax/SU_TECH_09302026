@@ -1,13 +1,11 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 
 import { decideReviewItem } from '../lib/governance.js'
-import { readDemoAuth } from '../lib/http.js'
+import { readWriteAuth } from '../lib/http.js'
 import { assertCanWrite, getTenantBySlug } from '../lib/tenant.js'
 
 // Approving or rejecting a queued item requires the same write-auth as any
-// other edit (see api/apply-change.ts). decidedBy is a placeholder identity
-// until M11 adds real owner accounts; the accountability record (who
-// approved what, when) already exists in review_queue either way.
+// other edit (see api/apply-change.ts).
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
     res.status(405).json({ error: 'Method not allowed' })
@@ -31,7 +29,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return
     }
 
-    const auth = readDemoAuth(req)
+    const auth = await readWriteAuth(req)
     if (!auth) {
       res.status(401).json({ error: 'Not authorized to review changes for this business' })
       return
@@ -43,7 +41,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return
     }
 
-    await decideReviewItem(tenant, reviewId, decision, 'Business owner (demo)')
+    const decidedBy = auth.kind === 'owner' ? 'Business owner' : 'Business owner (demo)'
+    await decideReviewItem(tenant, reviewId, decision, decidedBy)
     res.status(200).json({ ok: true })
   } catch (error) {
     if (error instanceof Error && error.message === 'This item has already been decided.') {

@@ -1,6 +1,7 @@
 import type { VercelRequest } from '@vercel/node'
 
-import type { WriteAuth } from './tenant.js'
+import { getServiceClient } from './db.js'
+import type { OwnerAuth, WriteAuth } from './tenant.js'
 
 // Vercel functions sit behind a proxy, so the real scheme comes from
 // x-forwarded-proto, not the request itself.
@@ -23,4 +24,28 @@ export function readDemoAuth(req: VercelRequest): WriteAuth | null {
   } catch {
     return null
   }
+}
+
+// M11's write-auth path: verifies a Supabase access token sent as
+// `Authorization: Bearer <token>` and resolves it to the owner's user id.
+// getServiceClient().auth.getUser(token) validates the token against
+// Supabase Auth itself (not just decoding it), so a forged or expired token
+// is rejected there, not trusted here.
+export async function readOwnerAuth(req: VercelRequest): Promise<OwnerAuth | null> {
+  const authHeader = req.headers.authorization
+  if (!authHeader?.startsWith('Bearer ')) return null
+  const token = authHeader.slice('Bearer '.length)
+
+  const { data, error } = await getServiceClient().auth.getUser(token)
+  if (error || !data.user) return null
+  return { kind: 'owner', userId: data.user.id }
+}
+
+// Tries owner auth first (a registered business editing its own record),
+// then falls back to the demo secret cookie (a cloned sandbox tenant).
+// Either can be absent; only one needs to succeed.
+export async function readWriteAuth(req: VercelRequest): Promise<WriteAuth | null> {
+  const owner = await readOwnerAuth(req)
+  if (owner) return owner
+  return readDemoAuth(req)
 }

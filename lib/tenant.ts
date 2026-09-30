@@ -16,7 +16,9 @@ export interface TenantRow {
 // Who is asking to write to a tenant. api/*.ts routes build this from the
 // request (a Supabase auth JWT for registered owners, or the demo secret
 // cookie issued by api/demo-start.ts) and pass it to assertCanWrite.
-export type WriteAuth = { kind: 'owner'; userId: string } | { kind: 'demo'; secret: string }
+export type OwnerAuth = { kind: 'owner'; userId: string }
+export type DemoAuth = { kind: 'demo'; secret: string }
+export type WriteAuth = OwnerAuth | DemoAuth
 
 function mapTenantRow(row: {
   id: string
@@ -56,6 +58,17 @@ export async function getTenantById(id: string): Promise<TenantRow | null> {
     .from('tenants')
     .select(TENANT_COLUMNS)
     .eq('id', id)
+    .maybeSingle()
+
+  if (error) throw error
+  return data ? mapTenantRow(data) : null
+}
+
+export async function getTenantByOwner(ownerUserId: string): Promise<TenantRow | null> {
+  const { data, error } = await getServiceClient()
+    .from('tenants')
+    .select(TENANT_COLUMNS)
+    .eq('owner_user_id', ownerUserId)
     .maybeSingle()
 
   if (error) throw error
@@ -280,6 +293,46 @@ export async function cloneTenantForDemo(
   if (sessionError) throw sessionError
 
   return { tenant, secret }
+}
+
+function slugify(name: string): string {
+  const base = name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+  return base || 'business'
+}
+
+// M11: a registered owner's first tenant. Unlike cloneTenantForDemo, this
+// starts with an empty catalog (nothing to clone from) -- the setup wizard
+// (api/setup-publish.ts) fills it in, gated behind the owner's explicit
+// confirmation. Hours are seeded closed for all seven days rather than left
+// empty, so the site/MCP/llms.txt never have to handle a day with no row.
+export async function createTenantForOwner(ownerUserId: string, name: string): Promise<TenantRow> {
+  const client = getServiceClient()
+  const baseSlug = slugify(name)
+  const slug = `${baseSlug}-${randomUUID().slice(0, 6)}`
+
+  const { data, error } = await client
+    .from('tenants')
+    .insert({ slug, name, owner_user_id: ownerUserId, is_canonical: false })
+    .select(TENANT_COLUMNS)
+    .single()
+  if (error) throw error
+  const tenant = mapTenantRow(data)
+
+  const { error: hoursError } = await client.from('hours').insert(
+    Array.from({ length: 7 }, (_, dayOfWeek) => ({
+      tenant_id: tenant.id,
+      day_of_week: dayOfWeek,
+      opens_at: null,
+      closes_at: null,
+      closed: true,
+    })),
+  )
+  if (hoursError) throw hoursError
+
+  return tenant
 }
 
 // Database-enforced RLS (supabase/schema.sql) already blocks anon/authenticated
