@@ -24,6 +24,13 @@ const DAY_NAME_TO_SCHEMA_ORG = [
   'Saturday',
 ] as const
 
+function faviconMimeType(href: string): string {
+  if (href.endsWith('.svg')) return 'image/svg+xml'
+  if (href.endsWith('.webp')) return 'image/webp'
+  if (href.endsWith('.jpg') || href.endsWith('.jpeg')) return 'image/jpeg'
+  return 'image/png'
+}
+
 function buildStructuredData(record: VerifiedRecord, origin: string, tenantSlug: string) {
   const openingHoursSpecification = record.hours
     .filter((h) => !h.closed && h.opensAt && h.closesAt)
@@ -63,6 +70,11 @@ export function renderSiteHtml(record: VerifiedRecord, origin: string): string {
   const logoHtml = record.profile.logoUrl
     ? `<img class="logo" src="${escapeHtml(record.profile.logoUrl)}" alt="${name} logo" />`
     : ''
+  // The business's own logo doubles as its site's tab icon when it has one --
+  // this page is a business's own front door, not OneBridge's, so its own
+  // brand should show in the tab. Falls back to OneBridge's icon rather than
+  // a blank/default tab icon for a business that hasn't uploaded one yet.
+  const faviconHref = record.profile.logoUrl ?? '/brand/icon-square.png'
 
   const productsHtml = record.products.length
     ? record.products
@@ -112,6 +124,7 @@ export function renderSiteHtml(record: VerifiedRecord, origin: string): string {
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <link rel="icon" type="${faviconMimeType(faviconHref)}" href="${escapeHtml(faviconHref)}" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>${name}</title>
   <meta name="description" content="${name}: current products, hours, and policies." />
