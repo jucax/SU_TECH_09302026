@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 
 import type { VerifiedRecord } from '@lib/schemas'
@@ -27,6 +27,14 @@ export function useTenantData() {
   const [activity, setActivity] = useState<ActivitySummary | null>(null)
   const [error, setError] = useState<string | null>(null)
 
+  const reload = useCallback(() => {
+    if (!slug) return
+    fetch(`/api/tenant-record?slug=${encodeURIComponent(slug)}`)
+      .then((res) => (res.ok ? (res.json() as Promise<VerifiedRecord>) : null))
+      .then((r) => r && setRecord(r))
+      .catch(() => {})
+  }, [slug])
+
   useEffect(() => {
     if (!slug) return
     sessionStorage.setItem(LAST_TENANT_KEY, slug)
@@ -44,5 +52,5 @@ export function useTenantData() {
       .catch(() => {})
   }, [slug])
 
-  return { slug, record, activity, error }
+  return { slug, record, activity, error, reload }
 }
