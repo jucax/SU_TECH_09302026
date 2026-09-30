@@ -878,16 +878,16 @@ export function Demo() {
             </div>
 
             <div className="flex flex-col gap-4 md:flex-row md:items-stretch">
-              <Card className="flex flex-col md:flex-1">
+              <Card className="md:flex-1 md:self-start">
                 <CardHeader>
                   <CardTitle>Before</CardTitle>
                   <CardDescription>Jorge's old website: stale prices, no structure.</CardDescription>
                 </CardHeader>
-                <CardContent className="flex flex-1 flex-col">
+                <CardContent>
                   <iframe
                     src="/demo/jorges-old-site.html"
                     title="Jorge's old website"
-                    className="min-h-64 w-full flex-1 rounded-lg border border-border"
+                    className="h-64 w-full rounded-lg border border-border"
                   />
                   <a
                     href="/demo/jorges-old-site.html"
