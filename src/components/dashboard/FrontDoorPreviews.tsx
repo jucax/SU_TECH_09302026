@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ArrowUpRight, Check, Copy, Globe, Pencil, Server } from 'lucide-react'
 
 import { Card } from '@/components/ui/card'
@@ -57,8 +57,60 @@ function cardRing(phase: UpdatePhase) {
   )
 }
 
-export function WebsitePreview({ product, businessName, logoUrl, slug, phase, onEdit }: PreviewProps) {
-  const done = phase === 'done'
+// The real generated site, shown as a scaled-down live page. It renders at a
+// desktop width and is shrunk to fit the card, so it looks like the site, not a
+// mock of it. Clicking anywhere on it opens the full site in a new tab.
+const SITE_RENDER_WIDTH = 1200
+const SITE_RENDER_HEIGHT = 800
+
+function SiteFrame({ src, title, reloadKey }: { src: string; title: string; reloadKey: string }) {
+  const boxRef = useRef<HTMLDivElement>(null)
+  const [scale, setScale] = useState(0.27)
+
+  useEffect(() => {
+    const el = boxRef.current
+    if (!el) return
+    const update = () => setScale(el.clientWidth / SITE_RENDER_WIDTH)
+    update()
+    const observer = new ResizeObserver(update)
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+
+  return (
+    <div
+      ref={boxRef}
+      className="relative w-full overflow-hidden bg-white"
+      style={{ height: SITE_RENDER_HEIGHT * scale * 0.6 }}
+    >
+      <iframe
+        key={reloadKey}
+        src={src}
+        title={title}
+        tabIndex={-1}
+        loading="lazy"
+        className="pointer-events-none absolute left-0 top-0 origin-top-left border-0"
+        style={{
+          width: SITE_RENDER_WIDTH,
+          height: SITE_RENDER_HEIGHT,
+          transform: `scale(${scale})`,
+        }}
+      />
+      <a
+        href={src}
+        target="_blank"
+        rel="noreferrer"
+        aria-label="Open website in a new tab"
+        className="absolute inset-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-action-blue"
+      />
+    </div>
+  )
+}
+
+export function WebsitePreview({ product, slug, phase, onEdit }: PreviewProps) {
+  const siteUrl = `/site/${slug}`
+  // Reload the frame after each edit so it shows the freshly published values.
+  const reloadKey = `${product?.name}-${product?.priceCents}-${product?.available}-${phase === 'done'}`
   return (
     <Card className={cardRing(phase)}>
       <header className="flex items-center justify-between gap-2">
@@ -67,7 +119,7 @@ export function WebsitePreview({ product, businessName, logoUrl, slug, phase, on
           <h3 className="text-base font-bold text-navy">Website for people</h3>
         </div>
         <a
-          href={`/site/${slug}`}
+          href={siteUrl}
           target="_blank"
           rel="noreferrer"
           aria-label="Open website in a new tab"
@@ -77,40 +129,14 @@ export function WebsitePreview({ product, businessName, logoUrl, slug, phase, on
         </a>
       </header>
 
-      {/* Lightweight HTML mini-preview built from the same record, not an iframe. */}
-      <div className="h-[184px] overflow-hidden rounded-[10px] border border-border bg-white">
+      <div className="overflow-hidden rounded-[10px] border border-border bg-white">
         <div className="flex items-center gap-1.5 border-b border-border bg-gray px-3 py-2">
           <span className="h-2 w-2 rounded-full bg-border" />
           <span className="h-2 w-2 rounded-full bg-border" />
           <span className="h-2 w-2 rounded-full bg-border" />
-          <span className="ml-2 truncate text-[11px] text-secondary">/site/{slug}</span>
+          <span className="ml-2 truncate text-[11px] text-secondary">{siteUrl}</span>
         </div>
-        <div className="flex h-[132px] flex-col gap-2 p-4">
-          <div className="flex items-center gap-1.5">
-            {logoUrl && (
-              <img src={logoUrl} alt="" className="h-4 w-4 shrink-0 rounded object-contain" />
-            )}
-            <p className="text-xs font-semibold text-secondary">{businessName}</p>
-          </div>
-          {product ? (
-            <>
-              <p className="text-sm font-bold text-navy">{product.name}</p>
-              <p
-                className={cn(
-                  'w-fit rounded px-1 text-xl font-extrabold tabular-nums text-navy transition-colors duration-700',
-                  done && 'bg-success-surface text-success',
-                )}
-              >
-                {formatPriceCents(product.priceCents, product.currency)}
-              </p>
-              <p className={cn('text-xs', product.available ? 'text-secondary' : 'text-error')}>
-                {product.available ? 'In stock' : 'Unavailable'}
-              </p>
-            </>
-          ) : (
-            <p className="text-sm text-secondary">No products published</p>
-          )}
-        </div>
+        <SiteFrame src={siteUrl} title="Website for people preview" reloadKey={reloadKey} />
       </div>
 
       <div className="mt-auto flex flex-col gap-2">
