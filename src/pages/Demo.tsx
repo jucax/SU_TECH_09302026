@@ -21,12 +21,12 @@ import { useNavigate } from 'react-router-dom'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { rememberTenant } from '@/lib/tenantSession'
 import { parseProductsCsv } from '@lib/csv'
 import { formatPriceCents } from '@lib/format'
 import type { HoursEntry, Policy, Product } from '@lib/schemas'
 import '@/pages/Workflow.css'
 
-const LAST_TENANT_KEY = 'onebridge:lastTenantSlug'
 const BUSINESS_NAME = "Jorge's Auto Parts"
 // Bar timeline runs 6 AM to 8 PM so every demo day fits with room to spare.
 const BAR_START_MIN = 6 * 60
@@ -401,7 +401,7 @@ export function Demo() {
       const startRes = await fetch('/api/demo-start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mode: 'fresh', name: BUSINESS_NAME }),
+        body: JSON.stringify({ name: BUSINESS_NAME }),
       })
       const startBody = await startRes.json()
       if (!startRes.ok) throw new Error(startBody.error ?? 'Could not create the sandbox business')
@@ -426,7 +426,7 @@ export function Demo() {
 
     try {
       const [, newSlug] = await Promise.all([pacing, work])
-      sessionStorage.setItem(LAST_TENANT_KEY, newSlug)
+      rememberTenant(newSlug)
       setSlug(newSlug)
       setScene('reveal')
     } catch (err) {

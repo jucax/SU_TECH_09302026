@@ -1,35 +1,17 @@
 import { useCallback, useEffect, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
 
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { reviewReason } from '@/lib/reviewReasons'
-
-const LAST_TENANT_KEY = 'onebridge:lastTenantSlug'
-
-interface ReviewQueueItem {
-  id: string
-  summary: string
-  rawInstruction: string | null
-  ruleTriggered: string
-  status: 'pending' | 'approved' | 'rejected'
-  decidedBy: string | null
-  decidedAt: string | null
-  createdAt: string
-}
+import { useTenantSlug } from '@/lib/tenantSession'
+import type { ReviewQueueItem } from '@lib/schemas'
 
 export function ReviewQueue() {
-  const [searchParams] = useSearchParams()
-  const [slug, setSlug] = useState<string | null>(null)
+  const slug = useTenantSlug()
   const [items, setItems] = useState<ReviewQueueItem[]>([])
   const [error, setError] = useState<string | null>(null)
   const [decidingId, setDecidingId] = useState<string | null>(null)
-
-  useEffect(() => {
-    const fromQuery = searchParams.get('slug')
-    setSlug(fromQuery ?? sessionStorage.getItem(LAST_TENANT_KEY))
-  }, [searchParams])
 
   const load = useCallback((forSlug: string) => {
     return fetch(`/api/review?slug=${encodeURIComponent(forSlug)}`)

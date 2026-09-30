@@ -19,7 +19,7 @@ function series(days: number, base: number, growth: number, wobble: number, seed
   )
 }
 
-export const SAMPLE_DAYS = 30
+const SAMPLE_DAYS = 30
 
 function dayLabels(days: number): string[] {
   const out: string[] = []

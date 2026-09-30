@@ -15,14 +15,12 @@ import {
   type DemoScript,
   type UpdateOutcome,
 } from '@/components/dashboard/UpdateChat'
-import type { ActivitySummary } from '@/components/dashboard/useTenantData'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { reviewReason } from '@/lib/reviewReasons'
 import { isDemoTenant, sample } from '@/lib/sampleData'
+import { useTenantSlug } from '@/lib/tenantSession'
 import { formatPriceCents, formatRelativeTime } from '@lib/format'
-import type { ChangeSet, VerifiedRecord } from '@lib/schemas'
-
-const LAST_TENANT_KEY = 'onebridge:lastTenantSlug'
+import type { ActivitySummary, ChangeSet, VerifiedRecord } from '@lib/schemas'
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 const sumRange = (a: number[], from: number, to: number) =>
@@ -247,7 +245,7 @@ function PerformanceSection({
 
 export function Dashboard() {
   const [searchParams] = useSearchParams()
-  const [slug, setSlug] = useState<string | null>(null)
+  const slug = useTenantSlug()
   const [record, setRecord] = useState<VerifiedRecord | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [activity, setActivity] = useState<ActivitySummary | null>(null)
@@ -257,13 +255,6 @@ export function Dashboard() {
   const [phase, setPhase] = useState<UpdatePhase>('idle')
   const [stepIndex, setStepIndex] = useState(0)
   const [reviewNotice, setReviewNotice] = useState<{ label: string; text: string } | null>(null)
-
-  useEffect(() => {
-    const fromQuery = searchParams.get('slug')
-    const resolved = fromQuery ?? sessionStorage.getItem(LAST_TENANT_KEY)
-    if (fromQuery) sessionStorage.setItem(LAST_TENANT_KEY, fromQuery)
-    setSlug(resolved)
-  }, [searchParams])
 
   const loadRecord = useCallback((forSlug: string) => {
     return fetch(`/api/tenant-record?slug=${encodeURIComponent(forSlug)}`)

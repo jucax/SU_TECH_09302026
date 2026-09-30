@@ -1,28 +1,12 @@
 import { useCallback, useEffect, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
 
-import type { VerifiedRecord } from '@lib/schemas'
+import { useTenantSlug } from '@/lib/tenantSession'
+import type { ActivitySummary, VerifiedRecord } from '@lib/schemas'
 
-const LAST_TENANT_KEY = 'onebridge:lastTenantSlug'
-
-export interface ActivitySummary {
-  mcpRequestCount: number
-  mcpRequestsByTool: Record<string, number>
-  lastUpdatedAt: string
-  updatesApplied: number
-  updatesBySource: Record<string, number>
-  reviewCounts: { pending: number; approved: number; rejected: number }
-  monitorRunCount: number
-  latestAccuracyScore: number | null
-  latestMismatches: number | null
-  accuracyTrend: Array<{ createdAt: string; accuracyScore: number }>
-}
-
-// Slug from ?slug= (remembered for the session), plus the tenant's record and
-// activity for the simple read-only dashboard tabs. Failures stay local.
+// The current business's record and activity for the simpler dashboard tabs.
+// Failures stay local to the tab that hit them.
 export function useTenantData() {
-  const [searchParams] = useSearchParams()
-  const slug = searchParams.get('slug') ?? sessionStorage.getItem(LAST_TENANT_KEY)
+  const slug = useTenantSlug()
   const [record, setRecord] = useState<VerifiedRecord | null>(null)
   const [activity, setActivity] = useState<ActivitySummary | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -37,7 +21,6 @@ export function useTenantData() {
 
   useEffect(() => {
     if (!slug) return
-    sessionStorage.setItem(LAST_TENANT_KEY, slug)
     setError(null)
     fetch(`/api/tenant-record?slug=${encodeURIComponent(slug)}`)
       .then(async (res) => {

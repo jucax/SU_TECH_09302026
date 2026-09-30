@@ -1,12 +1,10 @@
 import { useEffect, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
 
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { useTenantSlug } from '@/lib/tenantSession'
 import type { VerifiedRecord } from '@lib/schemas'
-
-const LAST_TENANT_KEY = 'onebridge:lastTenantSlug'
 
 interface ClaimDiffEntry {
   subject: string
@@ -94,19 +92,12 @@ function DiffTable({ diff }: { diff: ClaimDiffResult }) {
 }
 
 export function Monitoring() {
-  const [searchParams] = useSearchParams()
-  const [slug, setSlug] = useState<string | null>(null)
+  const slug = useTenantSlug()
   const [record, setRecord] = useState<VerifiedRecord | null>(null)
   const [prompt, setPrompt] = useState('')
   const [running, setRunning] = useState(false)
   const [result, setResult] = useState<MonitorResult | null>(null)
   const [runError, setRunError] = useState<string | null>(null)
-
-  useEffect(() => {
-    const fromQuery = searchParams.get('slug')
-    const resolved = fromQuery ?? sessionStorage.getItem(LAST_TENANT_KEY)
-    setSlug(resolved)
-  }, [searchParams])
 
   useEffect(() => {
     if (!slug) return

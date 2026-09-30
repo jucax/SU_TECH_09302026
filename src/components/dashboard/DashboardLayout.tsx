@@ -2,7 +2,6 @@ import type { ReactNode } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import {
   Activity,
-  ArrowUpRight,
   ClipboardCheck,
   FlaskConical,
   LayoutDashboard,
@@ -13,15 +12,13 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 
-import { supabase } from '@/lib/supabaseClient'
+import { forgetTenant } from '@/lib/tenantSession'
 import { cn } from '@/lib/utils'
 
 interface NavItem {
   label: string
   icon: LucideIcon
-  // Internal route (keeps ?slug) or an external URL opened in a new tab.
-  to?: string
-  href?: string
+  to: string
   end?: boolean
 }
 
@@ -49,30 +46,6 @@ function NavEntry({ item, pendingReview }: { item: NavItem; pendingReview: numbe
         {pendingReview}
       </span>
     ) : null
-
-  if (item.href || !item.to) {
-    // External or unavailable (no tenant yet): never an active route.
-    if (!item.href) {
-      return (
-        <span className={cn(itemBase, 'cursor-not-allowed text-secondary/60')}>
-          <Icon size={20} aria-hidden="true" />
-          {item.label}
-        </span>
-      )
-    }
-    return (
-      <a
-        href={item.href}
-        target="_blank"
-        rel="noreferrer"
-        className={cn(itemBase, 'text-secondary hover:bg-subtle-blue hover:text-navy')}
-      >
-        <Icon size={20} aria-hidden="true" />
-        {item.label}
-        <ArrowUpRight size={14} aria-hidden="true" className="ml-auto" />
-      </a>
-    )
-  }
 
   return (
     <NavLink
@@ -115,13 +88,8 @@ export function DashboardLayout({
   const items = navItems(slug)
   const navigate = useNavigate()
 
-  async function logOut() {
-    try {
-      await supabase.auth.signOut()
-    } catch {
-      // Demo sessions have no Supabase user; still leave the dashboard.
-    }
-    sessionStorage.removeItem('onebridge:lastTenantSlug')
+  function logOut() {
+    forgetTenant()
     navigate('/')
   }
 
