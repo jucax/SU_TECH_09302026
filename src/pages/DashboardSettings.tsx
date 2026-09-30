@@ -217,6 +217,7 @@ export function DashboardSettings() {
     <DashboardLayout
       slug={slug}
       businessName={displayName}
+      logoUrl={record?.profile.logoUrl}
       pendingReview={activity?.reviewCounts.pending ?? 0}
     >
       <div className="flex flex-col gap-6">

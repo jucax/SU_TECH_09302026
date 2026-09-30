@@ -218,6 +218,7 @@ export function DashboardTest() {
     <DashboardLayout
       slug={slug}
       businessName={record?.profile.name}
+      logoUrl={record?.profile.logoUrl}
       pendingReview={activity?.reviewCounts.pending ?? 0}
     >
       <div className="flex flex-col gap-6">

@@ -1,16 +1,18 @@
 import type { ReactNode } from 'react'
-import { NavLink } from 'react-router-dom'
+import { NavLink, useNavigate } from 'react-router-dom'
 import {
   Activity,
   ArrowUpRight,
   ClipboardCheck,
   FlaskConical,
   LayoutDashboard,
+  LogOut,
   Package,
   Settings,
   type LucideIcon,
 } from 'lucide-react'
 
+import { supabase } from '@/lib/supabaseClient'
 import { cn } from '@/lib/utils'
 
 interface NavItem {
@@ -94,6 +96,7 @@ function NavEntry({ item, pendingReview }: { item: NavItem; pendingReview: numbe
 interface DashboardLayoutProps {
   slug: string | null
   businessName?: string
+  logoUrl?: string | null
   pendingReview?: number
   children: ReactNode
 }
@@ -103,10 +106,22 @@ interface DashboardLayoutProps {
 export function DashboardLayout({
   slug,
   businessName,
+  logoUrl,
   pendingReview = 0,
   children,
 }: DashboardLayoutProps) {
   const items = navItems(slug)
+  const navigate = useNavigate()
+
+  async function logOut() {
+    try {
+      await supabase.auth.signOut()
+    } catch {
+      // Demo sessions have no Supabase user; still leave the dashboard.
+    }
+    sessionStorage.removeItem('onebridge:lastTenantSlug')
+    navigate('/')
+  }
 
   return (
     <div className="min-h-screen bg-gray lg:flex">
@@ -134,10 +149,35 @@ export function DashboardLayout({
           </nav>
 
           {businessName && (
-            <div className="mt-auto hidden rounded-[10px] bg-gray p-3 lg:block">
-              <p className="text-xs text-secondary">Managing</p>
-              <p className="truncate text-sm font-bold text-navy">{businessName}</p>
-            </div>
+            <button
+              type="button"
+              onClick={logOut}
+              title="Log out"
+              aria-label={`Log out of ${businessName}`}
+              className="group mt-auto hidden w-full items-center justify-center gap-3 rounded-[10px] bg-gray p-3 text-left transition-colors hover:bg-subtle-blue focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue focus-visible:ring-offset-2 lg:flex"
+            >
+              {logoUrl ? (
+                <img
+                  src={logoUrl}
+                  alt=""
+                  className="h-[47px] w-[47px] shrink-0 rounded-[10px] border border-border bg-white object-contain p-1"
+                />
+              ) : (
+                <span
+                  aria-hidden="true"
+                  className="grid h-[47px] w-[47px] shrink-0 place-items-center rounded-[10px] bg-action-blue text-lg font-bold text-white"
+                >
+                  {businessName.charAt(0).toUpperCase()}
+                </span>
+              )}
+              <span className="min-w-0 flex-1">
+                <span className="block text-xs text-secondary">Managing</span>
+                <span className="block truncate text-sm font-bold text-navy">{businessName}</span>
+                <span className="mt-0.5 flex items-center gap-1 text-xs font-semibold text-secondary group-hover:text-navy">
+                  <LogOut size={12} aria-hidden="true" /> Log out
+                </span>
+              </span>
+            </button>
           )}
         </div>
       </aside>
