@@ -23,6 +23,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const record = await getVerifiedRecord(tenant)
     const html = renderSiteHtml(record, getOrigin(req))
 
+    res.setHeader('Cache-Control', 'no-store')
     res.setHeader('Content-Type', 'text/html; charset=utf-8')
     res.status(200).send(html)
   } catch (error) {

@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/png" href="/brand/icon-square.png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Jorge&#39;s Auto Parts</title>
+  <meta name="description" content="Jorge&#39;s Auto Parts: current products, hours, and policies." />
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"LocalBusiness","name":"Jorge's Auto Parts","url":"https://onebridge-botb-2026.vercel.app/site/jorge-s-auto-parts-demo-dee58a","openingHoursSpecification":[{"@type":"OpeningHoursSpecification","dayOfWeek":"Monday","opens":"08:00:00","closes":"18:00:00"},{"@type":"OpeningHoursSpecification","dayOfWeek":"Tuesday","opens":"08:00:00","closes":"18:00:00"},{"@type":"OpeningHoursSpecification","dayOfWeek":"Wednesday","opens":"08:00:00","closes":"18:00:00"},{"@type":"OpeningHoursSpecification","dayOfWeek":"Thursday","opens":"08:00:00","closes":"18:00:00"},{"@type":"OpeningHoursSpecification","dayOfWeek":"Friday","opens":"08:00:00","closes":"19:00:00"},{"@type":"OpeningHoursSpecification","dayOfWeek":"Saturday","opens":"09:00:00","closes":"15:00:00"}],"makesOffer":[{"@type":"Offer","price":"49.99","priceCurrency":"USD","availability":"https://schema.org/InStock","itemOffered":{"@type":"Product","name":"Front Brake Rotor","description":"OEM-spec vented front brake rotor."}},{"@type":"Offer","price":"34.99","priceCurrency":"USD","availability":"https://schema.org/InStock","itemOffered":{"@type":"Product","name":"Ceramic Brake Pad Set","description":"Low-dust ceramic pads front axle set of 4."}},{"@type":"Offer","price":"12.99","priceCurrency":"USD","availability":"https://schema.org/InStock","itemOffered":{"@type":"Product","name":"Cabin Air Filter","description":"Replacement cabin air filter."}},{"@type":"Offer","price":"21.99","priceCurrency":"USD","availability":"https://schema.org/OutOfStock","itemOffered":{"@type":"Product","name":"Serpentine Belt","description":"Replacement serpentine drive belt."}},{"@type":"Offer","price":"8.99","priceCurrency":"USD","availability":"https://schema.org/InStock","itemOffered":{"@type":"Product","name":"Oil Filter","description":"Standard spin-on oil filter."}},{"@type":"Offer","price":"89.99","priceCurrency":"USD","availability":"https://schema.org/InStock","itemOffered":{"@type":"Product","name":"Headlight Assembly (Driver Side)","description":"Direct-fit halogen headlight assembly."}}]}</script>
+  <style>
+    :root {
+      --navy: #091D3F;
+      --orange: #F68835;
+      --gray: #F5F6F8;
+      --border: #DFE6EF;
+      --secondary: #52627A;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Montserrat, Arial, sans-serif;
+      background: var(--gray);
+      color: var(--navy);
+    }
+    a { color: #1D4ED8; }
+    header.site-header {
+      background: var(--navy);
+      color: white;
+      padding: 28px 20px;
+    }
+    header.site-header .inner { max-width: 1080px; margin: 0 auto; }
+    header.site-header .logo { height: 40px; width: auto; display: block; margin-bottom: 12px; border-radius: 6px; background: white; padding: 4px 8px; }
+    header.site-header h1 { font-size: 1.75rem; font-weight: 800; margin: 0 0 4px; }
+    header.site-header p { margin: 0; color: rgba(255,255,255,0.65); font-size: 0.875rem; }
+    header.site-header nav { margin-top: 16px; display: flex; gap: 20px; }
+    header.site-header nav a { color: rgba(255,255,255,0.85); font-size: 0.875rem; font-weight: 600; text-decoration: none; }
+    header.site-header nav a:hover { text-decoration: underline; }
+
+    main {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 32px 20px 56px;
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+    @media (max-width: 800px) {
+      main { grid-template-columns: 1fr; }
+    }
+
+    h2 { font-size: 1.1rem; font-weight: 700; margin: 0 0 12px; }
+    ul { list-style: none; margin: 0; padding: 0; }
+    section.card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 18px rgba(9,29,63,0.04);
+    }
+
+    .product {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .product:last-child { border-bottom: none; }
+    .product-name { font-weight: 700; margin: 0; }
+    .product-meta, .product-desc { font-size: 0.875rem; color: var(--secondary); margin: 2px 0 0; }
+    .product-price-col { text-align: right; flex-shrink: 0; }
+    .product-price { font-weight: 700; margin: 0; font-variant-numeric: tabular-nums; }
+    .product-avail { font-size: 0.8rem; margin: 3px 0 0; font-weight: 600; }
+    .in-stock { color: var(--secondary); }
+    .out-of-stock { color: var(--orange); }
+
+    .hours-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 6px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.875rem;
+    }
+    .hours-row:last-child { border-bottom: none; }
+    .policy { padding: 12px 0; border-bottom: 1px solid var(--border); }
+    .policy:last-child { border-bottom: none; }
+    .policy h3 { font-size: 0.9rem; font-weight: 700; margin: 0 0 4px; text-transform: capitalize; }
+    .policy p { margin: 0; font-size: 0.875rem; color: var(--secondary); line-height: 1.5; }
+    .empty { color: var(--secondary); font-size: 0.875rem; }
+
+    footer {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 0 20px 40px;
+      font-size: 0.8rem;
+      color: var(--secondary);
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="inner">
+      
+      <h1>Jorge&#39;s Auto Parts</h1>
+      <p>Published business information</p>
+      <nav>
+        <a href="#products">Products</a>
+        <a href="#hours">Hours</a>
+        <a href="#policies">Policies</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <div>
+      <section class="card" id="products">
+        <h2>Products</h2>
+        <ul>
+      <li class="product">
+        <div>
+          <p class="product-name">Front Brake Rotor</p>
+          <p class="product-meta">2015-2020 Honda Civic</p>
+          <p class="product-desc">OEM-spec vented front brake rotor.</p>
+        </div>
+        <div class="product-price-col">
+          <p class="product-price">$49.99</p>
+          <p class="product-avail in-stock">In stock</p>
+        </div>
+      </li>
+      <li class="product">
+        <div>
+          <p class="product-name">Ceramic Brake Pad Set</p>
+          <p class="product-meta">2015-2020 Honda Civic</p>
+          <p class="product-desc">Low-dust ceramic pads front axle set of 4.</p>
+        </div>
+        <div class="product-price-col">
+          <p class="product-price">$34.99</p>
+          <p class="product-avail in-stock">In stock</p>
+        </div>
+      </li>
+      <li class="product">
+        <div>
+          <p class="product-name">Cabin Air Filter</p>
+          <p class="product-meta">2012-2022 Honda Civic / Accord</p>
+          <p class="product-desc">Replacement cabin air filter.</p>
+        </div>
+        <div class="product-price-col">
+          <p class="product-price">$12.99</p>
+          <p class="product-avail in-stock">In stock</p>
+        </div>
+      </li>
+      <li class="product">
+        <div>
+          <p class="product-name">Serpentine Belt</p>
+          <p class="product-meta">2010-2018 Toyota Corolla</p>
+          <p class="product-desc">Replacement serpentine drive belt.</p>
+        </div>
+        <div class="product-price-col">
+          <p class="product-price">$21.99</p>
+          <p class="product-avail out-of-stock">Unavailable</p>
+        </div>
+      </li>
+      <li class="product">
+        <div>
+          <p class="product-name">Oil Filter</p>
+          <p class="product-meta">Most 4-cylinder Honda/Toyota engines</p>
+          <p class="product-desc">Standard spin-on oil filter.</p>
+        </div>
+        <div class="product-price-col">
+          <p class="product-price">$8.99</p>
+          <p class="product-avail in-stock">In stock</p>
+        </div>
+      </li>
+      <li class="product">
+        <div>
+          <p class="product-name">Headlight Assembly (Driver Side)</p>
+          <p class="product-meta">2016-2021 Honda Civic</p>
+          <p class="product-desc">Direct-fit halogen headlight assembly.</p>
+        </div>
+        <div class="product-price-col">
+          <p class="product-price">$89.99</p>
+          <p class="product-avail in-stock">In stock</p>
+        </div>
+      </li></ul>
+      </section>
+    </div>
+
+    <div>
+      <section class="card" id="hours">
+        <h2>Hours</h2>
+        <ul>
+      <li class="hours-row">
+        <span>Sunday</span>
+        <span>Closed</span>
+      </li>
+      <li class="hours-row">
+        <span>Monday</span>
+        <span>8:00 AM to 6:00 PM</span>
+      </li>
+      <li class="hours-row">
+        <span>Tuesday</span>
+        <span>8:00 AM to 6:00 PM</span>
+      </li>
+      <li class="hours-row">
+        <span>Wednesday</span>
+        <span>8:00 AM to 6:00 PM</span>
+      </li>
+      <li class="hours-row">
+        <span>Thursday</span>
+        <span>8:00 AM to 6:00 PM</span>
+      </li>
+      <li class="hours-row">
+        <span>Friday</span>
+        <span>8:00 AM to 7:00 PM</span>
+      </li>
+      <li class="hours-row">
+        <span>Saturday</span>
+        <span>9:00 AM to 3:00 PM</span>
+      </li></ul>
+      </section>
+
+      <section class="card" id="policies">
+        <h2>Policies</h2>
+        
+      <div class="policy">
+        <h3>pickup</h3>
+        <p>In-store pickup is available same day for in-stock items ordered before 3 PM.</p>
+      </div>
+      <div class="policy">
+        <h3>returns</h3>
+        <p>Unused parts in original packaging may be returned within 30 days with a receipt for a full refund. Electrical parts and special orders are final sale.</p>
+      </div>
+      <div class="policy">
+        <h3>warranty</h3>
+        <p>All parts carry the manufacturer&#39;s standard warranty. Jorge&#39;s Auto Parts offers a 90-day workmanship guarantee on any installation performed in-store.</p>
+      </div>
+      </section>
+    </div>
+  </main>
+
+  <footer>
+    Published from business-approved information through OneBridge &middot;
+    <a href="/site/jorge-s-auto-parts-demo-dee58a/llms.txt">llms.txt</a> &middot;
+    <a href="/site/jorge-s-auto-parts-demo-dee58a/mcp">MCP for AI</a>
+  </footer>
+</body>
+</html>

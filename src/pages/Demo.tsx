@@ -47,9 +47,9 @@ function compactTime(time: string | null): string {
   return `${hour}${m ? `:${String(m).padStart(2, '0')}` : ''} ${h >= 12 ? 'PM' : 'AM'}`
 }
 
-// Step 3 "Before": an earlier OneBridge-generated site for Jorge, kept as a live
-// reference now that the generator produces a newer storefront design.
-const PREVIOUS_SITE_URL = 'https://onebridge-botb-2026.vercel.app/site/jorge-s-auto-parts-demo-dee58a'
+// Step 3 "Before": an earlier OneBridge-generated site for Jorge (blue design), frozen as a
+// static snapshot so it stays the same after the generator moves to the newer storefront design.
+const PREVIOUS_SITE_URL = '/demo/jorges-previous-site.html'
 
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 

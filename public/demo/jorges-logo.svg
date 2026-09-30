@@ -1,7 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 340 90" width="340" height="90" role="img" aria-label="Jorge's Auto Parts logo">
-  <rect x="4" y="5" width="80" height="80" rx="14" fill="#1C1F26"/>
-  <text x="44" y="63" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="800" font-size="44" fill="#D93A2B">J</text>
-  <text x="100" y="46" font-family="Arial, Helvetica, sans-serif" font-weight="800" font-size="27" fill="#1C1F26">Jorge's Auto Parts</text>
-  <text x="100" y="67" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="12" letter-spacing="2.5" fill="#6B7280">PARTS &#183; SERVICE &#183; ADVICE</text>
-  <rect x="100" y="74" width="40" height="4" fill="#D93A2B"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 130" width="560" height="130" role="img" aria-labelledby="title desc">
+<title id="title">Jorge's Auto Parts</title><desc id="desc">A red and charcoal automotive badge beside a bold Jorge's Auto Parts wordmark.</desc>
+<path d="M62 7 112 36v58l-50 29L12 94V36Z" fill="#191d24"/>
+<path d="m62 14 44 25v51l-44 25-44-25V39Z" fill="none" stroke="#d4352b" stroke-width="3"/>
+<path d="M42 35h39v42c0 16-8 25-24 25-11 0-19-5-23-14l13-8c2 5 5 7 10 7 6 0 9-4 9-11V50H42Z" fill="white"/>
+<path d="m23 66 24-13-7 15-17 9Z" fill="#e54031"/>
+<g font-family="Arial Black,Arial,Helvetica,sans-serif" font-weight="900" font-style="italic">
+<text x="133" y="65" font-size="61" letter-spacing="-2" fill="#191d24">JORGE'S</text>
+<text x="136" y="99" font-size="25" letter-spacing="6.4" fill="#ce332a">AUTO PARTS</text>
+</g><path d="M135 111h344l-8 5H134Z" fill="#191d24"/><path d="m484 111 26 0-8 5h-26Z" fill="#ce332a"/>
 </svg>
