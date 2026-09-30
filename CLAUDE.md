@@ -61,6 +61,10 @@ Main Drive folder: <https://drive.google.com/drive/u/0/folders/1F5via96EBcUK7e0Q
 
 Repository: <https://github.com/jucax/SU_TECH_09302026>, branch `main`. The live repository is the prototype's source of truth. Inspect it before claiming planned features are built. Maintain a judge-friendly README with architecture, setup/run instructions, prototype status, and limitations.
 
+### Git Conventions
+
+One branch per build slice (`feat/<slice>` or `chore/<slice>`). Commit messages use the format `<slice id>: <short 1 to 2 line explanation>`, where the slice id is the build plan's M-number lowercased (for example `m4: clone Jorge seed into a fresh tenant on demo start`). Do not add an AI co-author attribution line to commits in this repository.
+
 ## Competition Working Principles
 
 Align research, business strategy, financials, technology, UX, security, prototype, written deliverables, and pitch around OneBridge. Keep the business plan, technical solution, pitch deck, judge Q&A, and spoken presentation consistent with them. Produce outputs reusable in deliverables.
