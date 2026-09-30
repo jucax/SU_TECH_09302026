@@ -97,8 +97,8 @@ export function Landing() {
   return (
     <div className="ob-landing">
       <a href="#main" className="ob-skip">Skip to content</a>
-      <header className="ob-header ob-container">
-        <Link to="/" aria-label="OneBridge home">
+      <header className="ob-header">
+        <Link className="ob-header-brand" to="/" aria-label="OneBridge home">
           <img src="/brand/logo-primary.png" alt="OneBridge" className="ob-logo" />
         </Link>
         <nav className="ob-nav" aria-label="Main navigation">
