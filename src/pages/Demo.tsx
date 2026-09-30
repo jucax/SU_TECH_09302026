@@ -392,7 +392,7 @@ export function Demo() {
             )
           })}
         </nav>
-        <div className="ob-demo-scenes">
+        <div className="ob-demo-scenes flex flex-col gap-6">
         {scene === 'intro' && (
           <Card>
             <CardHeader>
