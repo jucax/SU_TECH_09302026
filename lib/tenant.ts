@@ -335,6 +335,39 @@ export async function createTenantForOwner(ownerUserId: string, name: string): P
   return tenant
 }
 
+// The guided-demo walkthrough's tenant: same empty-catalog/closed-hours shape
+// as createTenantForOwner, but demo-secret-based like cloneTenantForDemo
+// rather than tied to a Supabase user, so a judge can walk through the setup
+// narrative without signing up. api/setup-publish.ts fills the catalog in
+// afterward, through the same code path a registered owner uses.
+export async function createTenantForDemo(name: string): Promise<{ tenant: TenantRow; secret: string }> {
+  const client = getServiceClient()
+  const baseSlug = slugify(name)
+  const slug = `${baseSlug}-demo-${randomUUID().slice(0, 6)}`
+  const secret = randomUUID()
+
+  const { data, error } = await client
+    .from('tenants')
+    .insert({ slug, name, is_canonical: false, demo_secret: secret })
+    .select(TENANT_COLUMNS)
+    .single()
+  if (error) throw error
+  const tenant = mapTenantRow(data)
+
+  const { error: hoursError } = await client.from('hours').insert(
+    Array.from({ length: 7 }, (_, dayOfWeek) => ({
+      tenant_id: tenant.id,
+      day_of_week: dayOfWeek,
+      opens_at: null,
+      closes_at: null,
+      closed: true,
+    })),
+  )
+  if (hoursError) throw hoursError
+
+  return { tenant, secret }
+}
+
 // Database-enforced RLS (supabase/schema.sql) already blocks anon/authenticated
 // writes outright. This is the application-level check on top of that: does
 // THIS caller own THIS tenant. Throws rather than returning a bool so a route

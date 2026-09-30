@@ -2,7 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { z } from 'zod'
 
 import { getServiceClient } from '../lib/db.js'
-import { readOwnerAuth } from '../lib/http.js'
+import { readWriteAuth } from '../lib/http.js'
 import { hoursEntrySchema, policySchema, productSchema } from '../lib/schemas.js'
 import { assertCanWrite, getTenantBySlug } from '../lib/tenant.js'
 
@@ -12,6 +12,11 @@ import { assertCanWrite, getTenantBySlug } from '../lib/tenant.js'
 // preview of the parsed data. Safe to call more than once for the same
 // tenant (e.g. the owner edits and republishes before ever seeing the
 // dashboard): products are replaced wholesale rather than accumulated.
+//
+// Accepts either a registered owner's session or a demo tenant's cookie
+// (readWriteAuth tries both) -- the guided demo walkthrough publishes to a
+// demo-secret tenant created via api/demo-start.ts's mode: 'fresh', not a
+// real signed-up owner.
 const publishSchema = z.object({
   slug: z.string(),
   products: z.array(productSchema.omit({ id: true })),
@@ -39,9 +44,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return
     }
 
-    const auth = await readOwnerAuth(req)
+    const auth = await readWriteAuth(req)
     if (!auth) {
-      res.status(401).json({ error: 'Not signed in' })
+      res.status(401).json({ error: 'Not authorized to publish this business' })
       return
     }
     try {

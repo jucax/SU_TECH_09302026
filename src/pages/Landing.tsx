@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import { Button } from '@/components/ui/button'
@@ -51,22 +50,6 @@ const proofPoints = [
 
 export function Landing() {
   const navigate = useNavigate()
-  const [starting, setStarting] = useState(false)
-  const [startError, setStartError] = useState<string | null>(null)
-
-  async function handleSeeItWork() {
-    setStarting(true)
-    setStartError(null)
-    try {
-      const res = await fetch('/api/demo-start', { method: 'POST' })
-      if (!res.ok) throw new Error((await res.json()).error ?? 'Failed to start demo')
-      const { slug } = (await res.json()) as { slug: string }
-      navigate(`/dashboard?slug=${encodeURIComponent(slug)}`)
-    } catch (err) {
-      setStartError(err instanceof Error ? err.message : 'Something went wrong')
-      setStarting(false)
-    }
-  }
 
   return (
     <div className="min-h-screen bg-gray">
@@ -95,14 +78,13 @@ export function Landing() {
             </p>
             <div className="flex flex-col items-center gap-2 lg:items-start">
               <div className="flex flex-wrap justify-center gap-3 lg:justify-start">
-                <Button variant="primary" size="lg" onClick={handleSeeItWork} disabled={starting}>
-                  {starting ? 'Setting up your sandbox...' : "See it work: Jorge's Auto Parts"}
+                <Button variant="primary" size="lg" onClick={() => navigate('/demo')}>
+                  See a live demo
                 </Button>
                 <Button asChild variant="secondary" size="lg">
                   <a href="/register">Set up your business</a>
                 </Button>
               </div>
-              {startError && <p className="text-sm text-error">{startError}</p>}
             </div>
           </div>
 

@@ -1,6 +1,7 @@
 import { Route, Routes } from 'react-router-dom'
 
 import { Dashboard } from '@/pages/Dashboard'
+import { Demo } from '@/pages/Demo'
 import { Landing } from '@/pages/Landing'
 import { Login } from '@/pages/Login'
 import { Monitoring } from '@/pages/Monitoring'
@@ -13,6 +14,7 @@ function App() {
   return (
     <Routes>
       <Route path="/" element={<Landing />} />
+      <Route path="/demo" element={<Demo />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/setup" element={<Setup />} />
