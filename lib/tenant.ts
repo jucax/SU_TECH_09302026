@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto'
 
-import type { HoursEntry, Policy, Product, VerifiedRecord } from './schemas'
-import { getServiceClient } from './db'
+import type { HoursEntry, Policy, Product, VerifiedRecord } from './schemas.js'
+import { getServiceClient } from './db.js'
 
 export interface TenantRow {
   id: string

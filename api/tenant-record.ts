@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 
-import { getTenantBySlug, getVerifiedRecord } from '../lib/tenant'
+import { getTenantBySlug, getVerifiedRecord } from '../lib/tenant.js'
 
 // Public, read-only: returns a tenant's verified record by slug. No auth
 // required -- this is the same data the website, llms.txt, and MCP server

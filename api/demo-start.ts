@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 
-import { cloneTenantForDemo, getCanonicalTenant } from '../lib/tenant'
+import { cloneTenantForDemo, getCanonicalTenant } from '../lib/tenant.js'
 
 // Clones the canonical Jorge's Auto Parts tenant into a fresh, private demo
 // tenant for this visitor. See lib/tenant.ts cloneTenantForDemo and
