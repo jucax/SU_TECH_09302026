@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { Bot, FlaskConical, Globe, RefreshCw } from 'lucide-react'
+import { AlertTriangle, Bot, FlaskConical, Globe, RefreshCw, X } from 'lucide-react'
 
-import { LineChart, SampleBadge, Sparkline } from '@/components/dashboard/charts'
+import { AreaTrend, SampleBadge, Sparkline } from '@/components/dashboard/charts'
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout'
 import {
   McpPreview,
@@ -17,6 +17,7 @@ import {
 } from '@/components/dashboard/UpdateChat'
 import type { ActivitySummary } from '@/components/dashboard/useTenantData'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { reviewReason } from '@/lib/reviewReasons'
 import { isDemoTenant, sample } from '@/lib/sampleData'
 import { formatPriceCents, formatRelativeTime } from '@lib/format'
 import type { ChangeSet, VerifiedRecord } from '@lib/schemas'
@@ -138,12 +139,14 @@ function Metric({
   value,
   helper,
   sampleTag,
+  children,
 }: {
   icon: React.ReactNode
   label: string
   value: string
   helper: string
   sampleTag?: boolean
+  children?: React.ReactNode
 }) {
   return (
     <Card className="flex flex-col gap-1 p-5">
@@ -154,6 +157,7 @@ function Metric({
       </div>
       <p className="text-3xl font-extrabold tabular-nums text-navy">{value}</p>
       <p className="text-xs text-secondary">{helper}</p>
+      {children && <div className="mt-3">{children}</div>}
     </Card>
   )
 }
@@ -193,7 +197,18 @@ function PerformanceSection({
           value={demo ? sample.totals.visits.toLocaleString('en-US') : 'Not tracked yet'}
           helper={demo ? 'Last 30 days' : 'Visit counting is not built in this prototype.'}
           sampleTag={demo}
-        />
+        >
+          {demo && (
+            <AreaTrend
+              values={sample.visits}
+              labels={sample.labels}
+              color="#F68835"
+              name="Website visits"
+              height={180}
+              ariaLabel={`Sample data: ${sample.totals.visits} website visits over 30 days`}
+            />
+          )}
+        </Metric>
         <Metric
           icon={<Bot size={18} aria-hidden="true" />}
           label="MCP calls (AI assistants)"
@@ -212,30 +227,20 @@ function PerformanceSection({
               : "Recorded tool requests to this business's MCP server, not unique users."
           }
           sampleTag={demo}
-        />
+        >
+          {demo && (
+            <AreaTrend
+              values={sample.mcpCalls}
+              labels={sample.labels}
+              color="#408EEC"
+              name="MCP calls"
+              height={180}
+              ariaLabel={`Sample data: ${sample.totals.mcpCalls} MCP calls over 30 days`}
+            />
+          )}
+        </Metric>
       </div>
 
-      {demo && (
-        <Card className="p-5">
-          <div className="mb-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-secondary">
-            <span className="text-sm font-semibold text-navy">Visits and AI calls, last 30 days</span>
-            <span className="inline-flex items-center gap-1">
-              <span className="h-2 w-2 rounded-full bg-orange" /> People
-            </span>
-            <span className="inline-flex items-center gap-1">
-              <span className="h-2 w-2 rounded-full bg-blue" /> AI assistants
-            </span>
-          </div>
-          <LineChart
-            labels={sample.labels}
-            series={[
-              { name: 'People', color: '#F68835', values: sample.visits },
-              { name: 'AI assistants', color: '#408EEC', values: sample.mcpCalls },
-            ]}
-            ariaLabel={`Sample data: ${sample.totals.visits} website visits and ${sample.totals.mcpCalls} MCP calls over 30 days`}
-          />
-        </Card>
-      )}
     </section>
   )
 }
@@ -250,6 +255,7 @@ export function Dashboard() {
 
   const [phase, setPhase] = useState<UpdatePhase>('idle')
   const [stepIndex, setStepIndex] = useState(0)
+  const [reviewNotice, setReviewNotice] = useState<{ label: string; text: string } | null>(null)
 
   useEffect(() => {
     const fromQuery = searchParams.get('slug')
@@ -344,10 +350,10 @@ export function Dashboard() {
         // Held changes are not published, so neither preview moves.
         loadActivity(slug)
         setPhase('idle')
-        return {
-          status: 'review',
-          message: `Held for owner review (${applyBody.ruleTriggered}): ${summary}`,
-        }
+        const reason = reviewReason(applyBody.ruleTriggered)
+        const text = `${reason.why} ${reason.action}`
+        setReviewNotice({ label: `${reason.label}: ${summary}`, text })
+        return { status: 'review', message: `Not published yet. ${text}` }
       }
 
       setPhase('refreshing')
@@ -431,6 +437,33 @@ export function Dashboard() {
       pendingReview={activity?.reviewCounts.pending ?? 0}
     >
       <div className="flex flex-col gap-6">
+        {reviewNotice && (
+          <div
+            role="alert"
+            className="flex items-start gap-3 rounded-[10px] border border-review/30 bg-review-surface px-4 py-3 text-sm text-review"
+          >
+            <AlertTriangle size={18} aria-hidden="true" className="mt-0.5 shrink-0" />
+            <div className="flex-1">
+              <p className="font-bold">{reviewNotice.label}</p>
+              <p>{reviewNotice.text}</p>
+              <a
+                href={`/dashboard/review${q}`}
+                className="mt-1 inline-block font-semibold underline underline-offset-4"
+              >
+                Go to review queue
+              </a>
+            </div>
+            <button
+              type="button"
+              onClick={() => setReviewNotice(null)}
+              aria-label="Dismiss notice"
+              className="text-review hover:opacity-70"
+            >
+              <X size={16} aria-hidden="true" />
+            </button>
+          </div>
+        )}
+
         {demo && (
           <div
             role="note"

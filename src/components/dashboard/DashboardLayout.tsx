@@ -4,6 +4,7 @@ import {
   Activity,
   ArrowUpRight,
   ClipboardCheck,
+  FlaskConical,
   LayoutDashboard,
   Package,
   Settings,
@@ -27,6 +28,7 @@ function navItems(slug: string | null): NavItem[] {
     { label: 'Dashboard', icon: LayoutDashboard, to: `/dashboard${q}`, end: true },
     { label: 'Products', icon: Package, to: `/dashboard/products${q}` },
     { label: 'Analytics', icon: Activity, to: `/dashboard/analytics${q}` },
+    { label: 'Test', icon: FlaskConical, to: `/dashboard/test${q}` },
     { label: 'Review queue', icon: ClipboardCheck, to: `/dashboard/review${q}` },
     { label: 'Settings', icon: Settings, to: `/dashboard/settings${q}` },
   ]

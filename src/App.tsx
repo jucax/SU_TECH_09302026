@@ -5,6 +5,7 @@ import { Demo } from '@/pages/Demo'
 import { DashboardAnalytics } from '@/pages/DashboardAnalytics'
 import { DashboardProducts } from '@/pages/DashboardProducts'
 import { DashboardSettings } from '@/pages/DashboardSettings'
+import { DashboardTest } from '@/pages/DashboardTest'
 import { Landing } from '@/pages/Landing'
 import { Login } from '@/pages/Login'
 import { Monitoring } from '@/pages/Monitoring'
@@ -27,6 +28,7 @@ function App() {
       <Route path="/dashboard/products" element={<DashboardProducts />} />
       <Route path="/dashboard/analytics" element={<DashboardAnalytics />} />
       <Route path="/dashboard/settings" element={<DashboardSettings />} />
+      <Route path="/dashboard/test" element={<DashboardTest />} />
       <Route path="*" element={<Placeholder title="Not found" slice="-" />} />
     </Routes>
   )

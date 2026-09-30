@@ -4,6 +4,7 @@ import { useSearchParams } from 'react-router-dom'
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { reviewReason } from '@/lib/reviewReasons'
 
 const LAST_TENANT_KEY = 'onebridge:lastTenantSlug'
 
@@ -16,12 +17,6 @@ interface ReviewQueueItem {
   decidedBy: string | null
   decidedAt: string | null
   createdAt: string
-}
-
-const RULE_LABELS: Record<string, string> = {
-  new_product: 'New product',
-  price_delta_over_20pct: 'Price change over 20%',
-  routine: 'Routine',
 }
 
 export function ReviewQueue() {
@@ -123,9 +118,10 @@ export function ReviewQueue() {
                   >
                     <div>
                       <p className="font-semibold text-navy">{item.summary}</p>
-                      <p className="text-sm text-review">
-                        {RULE_LABELS[item.ruleTriggered] ?? item.ruleTriggered}
+                      <p className="text-sm font-semibold text-review">
+                        {reviewReason(item.ruleTriggered).label}
                       </p>
+                      <p className="text-sm text-review">{reviewReason(item.ruleTriggered).why}</p>
                       {item.rawInstruction && (
                         <p className="mt-1 text-sm text-secondary">"{item.rawInstruction}"</p>
                       )}

@@ -1,9 +1,9 @@
 import { ArrowRight, ClipboardCheck, ShieldCheck } from 'lucide-react'
 
 import {
-  BarChart,
+  AreaTrend,
   Donut,
-  LineChart,
+  SalesBars,
   SampleBadge,
   Sparkline,
 } from '@/components/dashboard/charts'
@@ -55,12 +55,6 @@ export function DashboardAnalytics() {
               How people and AI assistants use your information, and how accurate it stays.
             </p>
           </div>
-          <a
-            href={`/dashboard/monitoring${q}`}
-            className="inline-flex min-h-[44px] items-center gap-2 rounded-[10px] bg-navy px-4 text-sm font-semibold text-white hover:bg-navy/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue focus-visible:ring-offset-2"
-          >
-            Run an accuracy check <ArrowRight size={16} aria-hidden="true" />
-          </a>
         </header>
 
         {demo && (
@@ -91,18 +85,38 @@ export function DashboardAnalytics() {
         <div className="grid gap-4 lg:grid-cols-3">
           <Card className="p-5 lg:col-span-2">
             <div className="mb-2 flex items-center justify-between gap-2">
-              <h2 className="text-base font-bold text-navy">Visits and AI calls</h2>
+              <h2 className="text-base font-bold text-navy">Visits and AI calls, last 30 days</h2>
               {demo ? <SampleBadge /> : null}
             </div>
             {demo ? (
-              <LineChart
-                labels={sample.labels}
-                series={[
-                  { name: 'People', color: '#F68835', values: sample.visits },
-                  { name: 'AI assistants', color: '#408EEC', values: sample.mcpCalls },
-                ]}
-                ariaLabel="Sample data: website visits and MCP calls over 30 days"
-              />
+              <div className="flex flex-col gap-4">
+                <div>
+                  <p className="mb-1 text-xs font-semibold text-secondary">
+                    Website visits (people)
+                  </p>
+                  <AreaTrend
+                    values={sample.visits}
+                    labels={sample.labels}
+                    color="#F68835"
+                    name="Website visits"
+                    height={130}
+                    ariaLabel="Sample data: website visits over 30 days"
+                  />
+                </div>
+                <div>
+                  <p className="mb-1 text-xs font-semibold text-secondary">
+                    MCP calls (AI assistants)
+                  </p>
+                  <AreaTrend
+                    values={sample.mcpCalls}
+                    labels={sample.labels}
+                    color="#408EEC"
+                    name="MCP calls"
+                    height={130}
+                    ariaLabel="Sample data: MCP calls over 30 days"
+                  />
+                </div>
+              </div>
             ) : (
               <p className="py-8 text-sm text-secondary">
                 Website visits are not tracked yet. Recorded MCP requests so far:{' '}
@@ -149,10 +163,9 @@ export function DashboardAnalytics() {
               {demo ? <SampleBadge /> : null}
             </div>
             {demo ? (
-              <BarChart
+              <SalesBars
                 values={sample.salesDaily}
                 labels={sample.labels}
-                color="#166534"
                 ariaLabel={`Sample data: daily sales totaling $${sample.totals.salesDollars} over 30 days`}
               />
             ) : (
@@ -217,11 +230,11 @@ export function DashboardAnalytics() {
                 <p className="text-xs text-secondary">
                   {realTrend.length >= 2
                     ? `${realTrend.length} controlled checks, latest ${Math.round(realTrend[realTrend.length - 1] * 100)}%.`
-                    : 'Illustrative trend. Run accuracy checks to record real readings.'}
+                    : 'Illustrative trend. The Test tab shows how an accuracy check works.'}
                 </p>
               </>
             ) : (
-              <p className="text-sm text-secondary">No checks yet. Run an accuracy check.</p>
+              <p className="text-sm text-secondary">No checks yet. Open the Test tab to see how a check works.</p>
             )}
           </Card>
 

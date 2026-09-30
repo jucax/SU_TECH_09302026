@@ -1,3 +1,19 @@
+import { useId } from 'react'
+import {
+  Area,
+  AreaChart,
+  Bar,
+  BarChart as RBarChart,
+  CartesianGrid,
+  Cell,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts'
+
 import { cn } from '@/lib/utils'
 
 // Small dependency-free SVG charts. Each carries an aria-label summary so the
@@ -53,113 +69,102 @@ export function Sparkline({
   )
 }
 
-interface LineSeries {
-  name: string
-  color: string
-  values: number[]
+const AXIS = { fontSize: 11, fill: '#52627A' }
+const TOOLTIP_STYLE = {
+  borderRadius: 10,
+  border: '1px solid #DFE6EF',
+  boxShadow: '0 4px 18px rgba(9,29,63,0.08)',
+  fontSize: 12,
 }
 
-export function LineChart({
-  series,
+// One metric over time as a soft gradient area. Used for visits and MCP calls
+// as two separate charts so each keeps its own scale.
+export function AreaTrend({
+  values,
   labels,
+  color,
+  name,
+  height = 200,
   ariaLabel,
 }: {
-  series: LineSeries[]
+  values: number[]
   labels: string[]
+  color: string
+  name: string
+  height?: number
   ariaLabel: string
 }) {
-  const W = 800
-  const H = 220
-  const pad = { l: 36, r: 8, t: 8, b: 24 }
-  const n = labels.length
-  const max = Math.max(1, ...series.flatMap((s) => s.values))
-  const niceMax = Math.ceil(max / 20) * 20
-  const x = (i: number) => pad.l + (i / (n - 1)) * (W - pad.l - pad.r)
-  const y = (v: number) => pad.t + (1 - v / niceMax) * (H - pad.t - pad.b)
-  const ticks = [0, 0.5, 1].map((f) => Math.round(niceMax * f))
-
+  const gid = useId().replace(/:/g, '')
+  const data = values.map((v, i) => ({ label: labels[i], value: v }))
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="h-auto w-full" role="img" aria-label={ariaLabel}>
-      {ticks.map((t) => (
-        <g key={t}>
-          <line x1={pad.l} x2={W - pad.r} y1={y(t)} y2={y(t)} stroke="#DFE6EF" />
-          <text x={pad.l - 6} y={y(t) + 4} textAnchor="end" fontSize="11" fill="#52627A">
-            {t}
-          </text>
-        </g>
-      ))}
-      {[0, Math.floor(n / 2), n - 1].map((i) => (
-        <text
-          key={i}
-          x={x(i)}
-          y={H - 6}
-          textAnchor={i === 0 ? 'start' : i === n - 1 ? 'end' : 'middle'}
-          fontSize="11"
-          fill="#52627A"
-        >
-          {labels[i]}
-        </text>
-      ))}
-      {series.map((s) => (
-        <polyline
-          key={s.name}
-          points={s.values.map((v, i) => `${x(i)},${y(v)}`).join(' ')}
-          fill="none"
-          stroke={s.color}
-          strokeWidth="2.5"
-          strokeLinejoin="round"
-          strokeLinecap="round"
-        />
-      ))}
-    </svg>
+    <div role="img" aria-label={ariaLabel} style={{ height }} className="w-full">
+      <ResponsiveContainer width="100%" height="100%">
+        <AreaChart data={data} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
+          <defs>
+            <linearGradient id={gid} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={color} stopOpacity={0.35} />
+              <stop offset="100%" stopColor={color} stopOpacity={0.02} />
+            </linearGradient>
+          </defs>
+          <CartesianGrid vertical={false} stroke="#DFE6EF" />
+          <XAxis
+            dataKey="label"
+            tick={AXIS}
+            tickLine={false}
+            axisLine={false}
+            interval="preserveStartEnd"
+            minTickGap={48}
+          />
+          <YAxis tick={AXIS} tickLine={false} axisLine={false} width={44} />
+          <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v) => [v, name]} />
+          <Area
+            type="monotone"
+            dataKey="value"
+            stroke={color}
+            strokeWidth={2.5}
+            fill={`url(#${gid})`}
+            activeDot={{ r: 4 }}
+            isAnimationActive={false}
+          />
+        </AreaChart>
+      </ResponsiveContainer>
+    </div>
   )
 }
 
-export function BarChart({
+export function SalesBars({
   values,
   labels,
-  color = '#408EEC',
   ariaLabel,
 }: {
   values: number[]
   labels: string[]
-  color?: string
   ariaLabel: string
 }) {
-  const W = 800
-  const H = 200
-  const pad = { l: 8, r: 8, t: 8, b: 24 }
-  const max = Math.max(1, ...values)
-  const bw = (W - pad.l - pad.r) / values.length
+  const data = values.map((v, i) => ({ label: labels[i], value: v }))
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="h-auto w-full" role="img" aria-label={ariaLabel}>
-      {values.map((v, i) => {
-        const h = (v / max) * (H - pad.t - pad.b)
-        return (
-          <rect
-            key={i}
-            x={pad.l + i * bw + 2}
-            y={H - pad.b - h}
-            width={Math.max(1, bw - 4)}
-            height={h}
-            rx="2"
-            fill={color}
+    <div role="img" aria-label={ariaLabel} className="h-[200px] w-full">
+      <ResponsiveContainer width="100%" height="100%">
+        <RBarChart data={data} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
+          <CartesianGrid vertical={false} stroke="#DFE6EF" />
+          <XAxis
+            dataKey="label"
+            tick={AXIS}
+            tickLine={false}
+            axisLine={false}
+            interval="preserveStartEnd"
+            minTickGap={48}
           />
-        )
-      })}
-      {[0, Math.floor(values.length / 2), values.length - 1].map((i) => (
-        <text
-          key={i}
-          x={i === 0 ? pad.l : i === values.length - 1 ? W - pad.r : pad.l + i * bw + bw / 2}
-          y={H - 6}
-          textAnchor={i === 0 ? 'start' : i === values.length - 1 ? 'end' : 'middle'}
-          fontSize="11"
-          fill="#52627A"
-        >
-          {labels[i]}
-        </text>
-      ))}
-    </svg>
+          <YAxis tick={AXIS} tickLine={false} axisLine={false} width={56} tickFormatter={(v) => `$${v}`} />
+          <Tooltip
+            contentStyle={TOOLTIP_STYLE}
+            cursor={{ fill: 'rgba(64,142,236,0.08)' }}
+            formatter={(v) => [`$${v}`, 'Sales']}
+          />
+          <Bar dataKey="value" fill="#166534" radius={[4, 4, 0, 0]} isAnimationActive={false} />
+        </RBarChart>
+      </ResponsiveContainer>
+    </div>
   )
 }
 
@@ -170,32 +175,27 @@ export function Donut({
   segments: Array<{ label: string; value: number; color: string }>
   ariaLabel: string
 }) {
-  const total = segments.reduce((a, s) => a + s.value, 0) || 1
-  const r = 44
-  const c = 2 * Math.PI * r
-  let offset = 0
   return (
-    <svg viewBox="0 0 120 120" className="h-32 w-32" role="img" aria-label={ariaLabel}>
-      <g transform="rotate(-90 60 60)">
-        {segments.map((s) => {
-          const len = (s.value / total) * c
-          const el = (
-            <circle
-              key={s.label}
-              cx="60"
-              cy="60"
-              r={r}
-              fill="none"
-              stroke={s.color}
-              strokeWidth="16"
-              strokeDasharray={`${len} ${c - len}`}
-              strokeDashoffset={-offset}
-            />
-          )
-          offset += len
-          return el
-        })}
-      </g>
-    </svg>
+    <div role="img" aria-label={ariaLabel} className="h-40 w-40">
+      <ResponsiveContainer width="100%" height="100%">
+        <PieChart>
+          <Pie
+            data={segments}
+            dataKey="value"
+            nameKey="label"
+            innerRadius="62%"
+            outerRadius="92%"
+            paddingAngle={3}
+            stroke="none"
+            isAnimationActive={false}
+          >
+            {segments.map((s) => (
+              <Cell key={s.label} fill={s.color} />
+            ))}
+          </Pie>
+          <Tooltip contentStyle={TOOLTIP_STYLE} />
+        </PieChart>
+      </ResponsiveContainer>
+    </div>
   )
 }

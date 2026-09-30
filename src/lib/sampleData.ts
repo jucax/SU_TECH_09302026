@@ -78,4 +78,8 @@ export const sample = {
     { name: 'Maria Lopez', role: 'Store manager', access: 'Routine updates' },
   ],
   plan: { name: 'Pilot plan', price: '$149 / month', note: 'Illustrative price from the business plan' },
+  plans: [
+    { name: 'Pilot plan', price: '$149 / month', note: 'Illustrative price from the business plan' },
+    { name: 'Starter (example)', price: '$79 / month', note: 'Example tier for the demo only' },
+  ],
 }
