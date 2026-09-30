@@ -4,7 +4,8 @@ import { ArrowUpRight, Check, Copy, Globe, Pencil, Server } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 import { formatPriceCents } from '@lib/format'
-import type { Product } from '@lib/schemas'
+import { McpInspector } from './McpInspector'
+import type { Product, VerifiedRecord } from '@lib/schemas'
 
 // Phases the frontend can actually observe: structure call, apply call, then
 // the record refetch. "done" only lasts long enough to flash the new values.
@@ -153,7 +154,8 @@ export function WebsitePreview({ product, slug, phase, onEdit }: PreviewProps) {
   )
 }
 
-export function McpPreview({ product, slug, phase, onEdit }: PreviewProps) {
+export function McpPreview({ product, slug, phase, onEdit, record, inspectOnLoad = false }: PreviewProps & { record: VerifiedRecord; inspectOnLoad?: boolean }) {
+  const [inspecting, setInspecting] = useState(inspectOnLoad)
   const [copied, setCopied] = useState<'ok' | 'fail' | null>(null)
   const endpoint = `${window.location.origin}/site/${slug}/mcp`
   const done = phase === 'done'
@@ -204,9 +206,9 @@ export function McpPreview({ product, slug, phase, onEdit }: PreviewProps) {
         </button>
       </header>
 
-      <div className="flex h-[184px] flex-col overflow-hidden rounded-[10px] bg-navy">
+      <button type="button" onClick={() => setInspecting(true)} aria-label="Inspect the approved data available to AI" className="flex h-[184px] w-full flex-col overflow-hidden rounded-[10px] bg-navy text-left focus-visible:ring-2 focus-visible:ring-action-blue focus-visible:ring-offset-2">
         <p className="border-b border-white/10 px-3 py-2 text-[11px] text-white/60">
-          Approved data preview
+          Approved data preview · Click to inspect
         </p>
         {json ? (
           <pre
@@ -220,7 +222,7 @@ export function McpPreview({ product, slug, phase, onEdit }: PreviewProps) {
         ) : (
           <p className="p-3 text-sm text-white/70">No products published</p>
         )}
-      </div>
+      </button>
 
       <p className="line-clamp-1 break-all text-[11px] text-secondary" role="status">
         {copied === 'fail' ? 'Could not copy. Select the URL manually.' : endpoint}
@@ -230,12 +232,13 @@ export function McpPreview({ product, slug, phase, onEdit }: PreviewProps) {
       <PhaseBar phase={phase} />
       <button
         type="button"
-        onClick={onEdit}
+        onClick={() => setInspecting(true)}
         className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-[10px] border border-border bg-white px-4 text-sm font-semibold text-navy hover:bg-subtle-blue focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action-blue focus-visible:ring-offset-2"
       >
-        <Pencil size={16} aria-hidden="true" /> Edit with AI
+        <Server size={16} aria-hidden="true" /> Inspect AI connection
       </button>
       </div>
+      {inspecting && <McpInspector record={record} phase={phase} onClose={() => setInspecting(false)} onUpdate={onEdit} />}
     </Card>
   )
 }
