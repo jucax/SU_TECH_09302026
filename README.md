@@ -43,7 +43,7 @@ No account or sign-in is needed. Every demo run creates a private sandbox copy o
    5. *Reveal*: compare the earlier website with the two generated front doors side by side.
 3. **Click "Go to the dashboard"** and look at the two front-door cards. Open the website preview (it links to the live generated site) and click **Inspect AI connection** to see the exact approved data and the four tools an AI client receives.
 4. **Make a plain-language update.** In the dashboard, type an instruction such as *"Change the front brake rotor to $54.99"* into the update box. Watch the website and MCP data change together. Then try a big change (for example, raise a price by more than 20 percent, or add a new product) and open **Review queue** to see it held for a person to approve or reject.
-5. **Check the audit trail and activity** in **Dashboard** and **Analytics**.
+5. **Check activity.** **Dashboard** and **Analytics** show when the record last changed, MCP call counts, pending reviews, and the accuracy trend.
 6. **Run the accuracy check.** Open **Test** for a scripted illustration of the method, then follow "Open the live accuracy check" (`/dashboard/monitoring`) to run a real comparison against an AI model.
 7. **Look at what AI systems see.** Open `/site/<business>/llms.txt` (linked from the generated site), the platform-level `/llms.txt`, and `/robots.txt`.
 
@@ -60,7 +60,7 @@ Being specific here matters more than sounding impressive. Labels: **Built** mea
 - **Discovery files**: platform `robots.txt` and `llms.txt`, plus a per-business `llms.txt` that lists products, prices, stock, hours, policies, and MCP connection instructions.
 - **MCP Server for AI**: stateless Streamable HTTP endpoint with four read-only tools (`getBusinessProfile`, `listProducts`, `checkAvailability`, `getPolicies`). There are no write, payment, order, or reservation tools. Every call is logged (`api/mcp.ts`).
 - **Plain-language updates**: an instruction is turned into a structured change by Claude, checked against the current record, and shown before it is applied (`lib/ai/structure.ts`, `api/structure.ts`).
-- **Governance rules**: routine changes (stock toggles, small price edits, descriptions, hours, policies) auto-sync. A new product or a price change of more than 20 percent goes to a **review queue** for a person to approve or reject. The routing decision is deterministic code, never a model call, and every applied change is written to an audit log (`lib/governance.ts`, `api/apply-change.ts`, `api/review.ts`).
+- **Governance rules**: routine changes (stock toggles, small price edits, descriptions, hours, policies) auto-sync. A new product or a price change of more than 20 percent goes to a **review queue** for a person to approve or reject. The routing decision is deterministic code, never a model call, and every applied change is written to an audit log in the database (`lib/governance.ts`, `api/apply-change.ts`, `api/review.ts`).
 - **Accuracy check**: the same question is sent to the same Claude model twice with identical settings, once with no tools and once with the business's live MCP server attached. The answers are broken into factual claims and compared against the approved record (`api/monitor.ts`, `lib/ai/extractClaims.ts`, `lib/diff.ts`).
 - **Owner dashboard**: overview with both front-door previews, products, analytics, test, review queue, and settings.
 - **Activity tracking from real events**: MCP tool calls, applied changes, review counts, and accuracy-check results are recorded in the database.
@@ -163,7 +163,8 @@ This addresses the ethics and governance requirement in the case.
 - **The accuracy check is a controlled test, not market measurement.** It shows that an assistant connected to a business's MCP server can state that business's facts correctly, compared with the same model without it. It does not show how independent shopping assistants rank or describe the business in the wild. No conversion or visibility improvement is claimed.
 - **Sample size.** The check is run one question at a time by the user. It is a demonstration of the method, not a statistically meaningful benchmark.
 - **Stock and prices** reflect the owner's approved record, not a live point-of-sale system.
-- **Prototype scale.** This is a single-region hosted proof of concept with example data (Jorge's Auto Parts). It has not been load tested or security audited.
+- **Prototype scale.** This is a hosted proof of concept with example data (Jorge's Auto Parts). It has not been load tested or independently security audited.
+- **Audit log viewing.** Applied changes and review decisions are recorded in the database, but the dashboard does not yet include a full audit-trail viewer. It shows the last-updated time and counts.
 - **Demo sandboxes** are anonymous and protected by a per-session cookie, not by user accounts.
 - **Live AI features** (plain-language updates and the accuracy check) need an Anthropic API key configured on the server. If the prepaid balance runs out, those features stop while the rest of the site keeps working.
 
