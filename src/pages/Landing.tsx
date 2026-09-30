@@ -47,6 +47,27 @@ const steps = [
   },
 ]
 
+const plans = [
+  {
+    name: 'Starter',
+    for: 'For a business getting its information online.',
+    features: ['Verified business information', 'Website for People', 'MCP Server for AI', 'Owner review before publishing'],
+    featured: false,
+  },
+  {
+    name: 'Growth',
+    for: 'For a business that updates often.',
+    features: ['Everything in Starter', 'AI-assisted updates', 'Activity and freshness tracking', 'Inconsistency flags'],
+    featured: true,
+  },
+  {
+    name: 'Scale',
+    for: 'For a business with more products and locations.',
+    features: ['Everything in Growth', 'Larger catalogs', 'Multiple locations', 'Priority support'],
+    featured: false,
+  },
+]
+
 function Actions() {
   return (
     <div className="ob-actions">
@@ -70,7 +91,7 @@ export function Landing() {
         </Link>
         <nav className="ob-nav" aria-label="Main navigation">
           <a className="ob-nav-detail" href="#how-it-works">How it works</a>
-          <a className="ob-nav-detail" href="#for-judges">For judges</a>
+          <a className="ob-nav-detail" href="#pricing">Pricing</a>
           <Link to="/login">Log in</Link>
           <Link className="ob-button ob-button-small ob-button-outline" to="/register">Set up your business</Link>
         </nav>
@@ -145,27 +166,44 @@ export function Landing() {
           <div className="ob-trust-note"><span aria-hidden="true">✓</span><p><strong>Truth before visibility.</strong> OneBridge helps make approved information accessible. It does not guarantee recommendations or independently certify every merchant claim.</p></div>
         </section>
 
-        <section id="for-judges" className="ob-judge-simple ob-container" aria-labelledby="judges-title">
-          <p className="ob-eyebrow">FOR THE JUDGES</p>
-          <h2 id="judges-title">Two ways to explore OneBridge.</h2>
-          <p className="ob-body">Follow Jorge’s guided live demo, or try setting up a business yourself.</p>
-          <Actions />
-        </section>
-
-        <section className="ob-values-section ob-container" aria-labelledby="values-title">
-          <div className="ob-values-heading">
-            <p className="ob-eyebrow">WHAT GUIDES US</p>
-            <h2 id="values-title">Core values, built into every connection.</h2>
-            <p className="ob-body">The way we connect business information to AI matters as much as the technology itself.</p>
+        <section id="pricing" className="ob-pricing ob-container" aria-labelledby="pricing-title">
+          <div className="ob-pricing-heading">
+            <p className="ob-eyebrow">PRICING</p>
+            <h2 id="pricing-title">Simple plans for every stage of your business.</h2>
+            <p className="ob-body">Final pricing is still being defined. The amounts below are placeholders.</p>
           </div>
-          <div className="ob-values-grid">
-            {coreValues.map(({ title, body, icon: Icon }, index) => (
-              <article className="ob-value-card" key={title}>
-                <div className="ob-value-top"><span className="ob-value-icon"><Icon size={22} strokeWidth={1.8} /></span><span className="ob-value-number">0{index + 1}</span></div>
-                <h3>{title}</h3>
-                <p>{body}</p>
+          <div className="ob-pricing-grid">
+            {plans.map((plan) => (
+              <article className={`ob-plan${plan.featured ? ' ob-plan-featured' : ''}`} key={plan.name}>
+                {plan.featured && <span className="ob-plan-badge">Placeholder: most popular</span>}
+                <h3>{plan.name}</h3>
+                <p className="ob-plan-for">{plan.for}</p>
+                <p className="ob-plan-price"><strong>$XX</strong><span>/ month</span></p>
+                <ul>
+                  {plan.features.map((feature) => <li key={feature}>{feature}</li>)}
+                </ul>
+                <Link className={`ob-button ${plan.featured ? 'ob-button-primary' : 'ob-button-outline'}`} to="/register">Get started</Link>
               </article>
             ))}
+          </div>
+        </section>
+
+        <section className="ob-values-section" aria-labelledby="values-title">
+          <div className="ob-container">
+            <div className="ob-values-heading">
+              <p className="ob-eyebrow">WHAT GUIDES US</p>
+              <h2 id="values-title">Core values, built into every connection.</h2>
+              <p>The way we connect business information to AI matters as much as the technology itself.</p>
+            </div>
+            <ol className="ob-values-list">
+              {coreValues.map(({ title, body, icon: Icon }, index) => (
+                <li className="ob-value-row" key={title}>
+                  <span className="ob-value-number">0{index + 1}</span>
+                  <div className="ob-value-copy"><h3>{title}</h3><p>{body}</p></div>
+                  <span className="ob-value-icon"><Icon size={26} strokeWidth={1.6} /></span>
+                </li>
+              ))}
+            </ol>
           </div>
         </section>
 
