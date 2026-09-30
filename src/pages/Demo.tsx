@@ -878,7 +878,7 @@ export function Demo() {
             </div>
 
             <div className="flex flex-col gap-4 md:flex-row md:items-stretch">
-              <Card className="md:flex-1">
+              <Card className="md:flex md:flex-1 md:flex-col md:justify-center">
                 <CardHeader>
                   <CardTitle>Before</CardTitle>
                   <CardDescription>Jorge's old website: stale prices, no structure.</CardDescription>
