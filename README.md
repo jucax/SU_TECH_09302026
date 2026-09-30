@@ -239,7 +239,7 @@ Owner dashboard
 ```
 
 - **One source of truth.** The website, `llms.txt`, and MCP tools all read the same verified record, so they stay consistent.
-- **All writes go through the server.** The browser only holds a publishable key. Tables are publicly readable only where the information is meant to be public (a business's published facts). Internal tables (audit log, review queue, request logs, monitor runs) have no public policies. Writes use a server-side key and check tenant ownership.
+- **All reads and writes go through the server.** The browser holds no database key. Tables are publicly readable only where the information is meant to be public (a business's published facts). Internal tables (audit log, review queue, request logs, monitor runs) have no public policies. Writes use a server-side key and check tenant ownership.
 - **Routes** are defined in `vercel.json`. Discovery files and the MCP endpoint are matched before the single-page-app fallback.
 
 ### Repository map

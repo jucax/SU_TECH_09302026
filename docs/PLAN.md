@@ -2,10 +2,10 @@
 
 ## Status
 
-Execution starting now at M1. Repo state confirmed: `main` up to date with `origin/main`, only
-`README.md` tracked and `CLAUDE.md` present but untracked. First commit of M1 should add `CLAUDE.md`
-to version control (it is the source of truth referenced throughout this plan and belongs in history)
-before scaffolding begins.
+Historical. This is the plan the prototype was built from, kept for its reasoning and scope
+decisions. For what was actually built, what is illustrative, and what is not built, see the
+[README](../README.md). Notable changes after this plan: the instant demo clone (M4) was replaced
+by a guided walkthrough at `/demo`, and registration and login (M11) were removed from the prototype.
 
 ## Context
 

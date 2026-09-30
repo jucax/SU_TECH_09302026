@@ -15,15 +15,17 @@
 
 create extension if not exists "pgcrypto";
 
--- A business. Either owned by a Supabase auth user (registered) or created via the
--- demo clone route (demo), in which case owner_user_id is null and demo_secret gates writes.
+-- A business. The prototype creates demo tenants only, where demo_secret gates
+-- writes. owner_user_id is reserved for registered owners (not built in the
+-- current app; see README "Not built").
 create table tenants (
   id uuid primary key default gen_random_uuid(),
   slug text not null unique,               -- used in /site/:slug routes
   name text not null,
   owner_user_id uuid references auth.users (id),
-  is_canonical boolean not null default false, -- true only for the one demo tenant used in the live pitch/README
-  demo_secret text,                        -- set only for demo-cloned tenants; null for registered tenants
+  is_canonical boolean not null default false, -- true only for the seeded Jorge's Auto Parts tenant
+  demo_secret text,                        -- set for demo tenants; null for the seeded tenant
+  logo_url text,                           -- public URL in the tenant-logos storage bucket
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -158,3 +160,13 @@ create policy policies_public_read on policies for select to anon, authenticated
 -- Postgres denies the operation by default for anon/authenticated. Only the
 -- service_role key (used exclusively in api/*.ts, never sent to the browser)
 -- bypasses RLS and can perform these operations.
+
+-- Business logos (lib/logo.ts). Uploaded server-side with the service_role
+-- key, so no insert policy is needed; the bucket is public so the website,
+-- dashboard, and tab icon can load the image directly.
+insert into storage.buckets (id, name, public)
+values ('tenant-logos', 'tenant-logos', true)
+on conflict (id) do nothing;
+
+create policy "Public read for tenant logos" on storage.objects
+  for select using (bucket_id = 'tenant-logos');
