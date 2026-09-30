@@ -1,0 +1,8 @@
+# Jorge and Maria illustration
+
+Generated with built-in image generation. Asset: `jorge-and-maria-v2.png`.
+Style reference: user-supplied `OneBridge Problem.png`.
+
+## Prompt
+
+Use case: illustration-story. Create a polished wide website illustration, landscape 2.5:1 composition. Attached image is STYLE REFERENCE only: emulate its premium crisp blue and orange vector-like editorial illustration, gentle dimensional shading, clean rounded forms, white/pale ice blue backdrop. Create entirely new scene for OneBridge landing page. Left: a warmly illustrated adult Latino local auto-parts shop owner Jorge, navy work shirt with orange apron details, holding a tablet, beside a beautiful small blue-white awning storefront with an orange trim, neatly rendered spare parts display. Right: adult Latina customer Maria, natural friendly face and well-proportioned illustrated hands, blue casual jacket, holding a smartphone and considering a brake rotor product card. Between them leave generous clear breathing space with a tasteful curved blue-to-orange connection ribbon and two small floating cards showing a product icon plus a checkmark and a price-tag icon. Convey small-business expertise connecting to better customer choices. Sophisticated commercial illustration, refined shapes, careful faces, layered color and soft highlights like reference; not childish stick figures, not photorealism, not crude SVG geometry. No text, no letters, no numbers, no logos, no headings, no watermark. Keep people and shop comfortably inside frame with white margin. Create a finished marketing image that can sit beneath an HTML headline.

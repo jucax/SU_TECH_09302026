@@ -1,9 +1,9 @@
-import { useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import './Landing.css'
 
 const JORGE_SLUG = 'jorges-auto-parts'
+const ASSET = '/landing/'
 
 const judgeLinks = [
   {
@@ -13,158 +13,176 @@ const judgeLinks = [
   },
   {
     label: 'llms.txt',
-    description: 'States the verified facts and points to the MCP endpoint below.',
+    description: 'Published business facts and a pointer to the MCP endpoint.',
     href: `/site/${JORGE_SLUG}/llms.txt`,
   },
   {
     label: 'MCP endpoint',
-    description: 'The front door for AI. Connect it from Claude Desktop or MCP Inspector.',
+    description: 'Connect it from a compatible assistant or MCP Inspector.',
     href: `/site/${JORGE_SLUG}/mcp`,
   },
   {
     label: 'Connected AI accuracy check',
-    description: 'Same question, same model, same settings. One side has this MCP server, one does not.',
+    description: 'Compare answers with and without Jorge’s MCP connection.',
     href: '/dashboard/monitoring',
   },
   {
     label: 'Source on GitHub',
-    description: 'Full history, README with setup and status, and this build plan.',
+    description: 'Review the code, setup instructions, and prototype status.',
     href: 'https://github.com/jucax/SU_TECH_09302026',
   },
 ]
 
-const proofPoints = [
+const steps = [
   {
-    title: 'Current business facts',
-    body: "Prices, stock, and policies come from the business owner's own verified record, not a scrape.",
+    title: 'Give us what you have',
+    body: 'Bring your catalog, business details, or CSV. PDF and existing website ingestion are part of the product vision.',
   },
   {
-    title: 'Answer checking',
-    body: 'A controlled comparison checks whether a connected AI answer matches that verified record, field by field.',
+    title: 'We clean the data',
+    body: 'OneBridge organizes your facts and flags uncertainty. You review and approve information before it is shared.',
   },
   {
-    title: 'Owner control',
-    body: 'Routine edits sync automatically. Larger changes, like a new product, wait for the owner to approve them.',
+    title: 'We create your front doors',
+    body: 'A website for people and an MCP connection for compatible AI assistants draw from the same approved information.',
+  },
+  {
+    title: 'We stay with you',
+    body: 'Update your information, inspect flagged inconsistencies, and track activity from your OneBridge platform.',
   },
 ]
 
-export function Landing() {
-  const navigate = useNavigate()
-
+function Actions() {
   return (
-    <div className="min-h-screen bg-gray">
-      <header className="mx-auto flex max-w-[1120px] items-center justify-between px-6 py-6">
-        <img src="/brand/logo-primary.png" alt="OneBridge" className="h-9 w-auto object-contain" />
-        <nav className="flex items-center gap-4 text-sm font-semibold text-navy">
-          <a href="/login" className="hover:text-action-blue">
-            Log in
-          </a>
-          <Button asChild size="sm" variant="secondary">
-            <a href="/register">Set up your business</a>
-          </Button>
+    <div className="ob-actions">
+      <Link className="ob-button ob-button-primary" to="/demo">
+        See the live demo <span aria-hidden="true">→</span>
+      </Link>
+      <Link className="ob-button ob-button-outline" to="/register">
+        Try it yourself <span aria-hidden="true">↗</span>
+      </Link>
+    </div>
+  )
+}
+
+export function Landing() {
+  return (
+    <div className="ob-landing">
+      <a href="#main" className="ob-skip">Skip to content</a>
+      <header className="ob-header ob-container">
+        <Link to="/" aria-label="OneBridge home">
+          <img src="/brand/logo-primary.png" alt="OneBridge" className="ob-logo" />
+        </Link>
+        <nav className="ob-nav" aria-label="Main navigation">
+          <a className="ob-nav-detail" href="#how-it-works">How it works</a>
+          <a className="ob-nav-detail" href="#for-judges">For judges</a>
+          <Link to="/login">Log in</Link>
+          <Link className="ob-button ob-button-small ob-button-outline" to="/register">Set up your business</Link>
         </nav>
       </header>
 
-      <main className="mx-auto max-w-[1120px] px-6">
-        <section className="grid grid-cols-1 items-center gap-10 py-10 lg:grid-cols-2 lg:py-16">
-          <div className="flex flex-col gap-5 text-center lg:text-left">
-            <h1 className="text-3xl font-extrabold leading-tight text-navy sm:text-4xl">
-              One trusted foundation. Two connected front doors.
-            </h1>
-            <p className="text-base text-secondary">
-              Manage approved business information once, then use it for your website and a
-              connection compatible AI assistants can access. Jorge runs a local auto parts store;
-              OneBridge keeps his prices, stock, and policies accurate everywhere they're used.
+      <main id="main">
+        <section className="ob-hero ob-container" aria-labelledby="hero-title">
+          <div className="ob-hero-copy ob-enter">
+            <p className="ob-eyebrow"><span className="ob-dot" />THE TRUSTED CONNECTION</p>
+            <h1 id="hero-title">You know your business.<br /><span>Help AI understand it.</span></h1>
+            <p className="ob-hero-description">
+              Help your business become more accessible to AI-assisted shopping, and help customers find accurate product information. OneBridge connects business-approved facts to a website for people and an MCP connection for compatible AI assistants.
             </p>
-            <div className="flex flex-col items-center gap-2 lg:items-start">
-              <div className="flex flex-wrap justify-center gap-3 lg:justify-start">
-                <Button variant="primary" size="lg" onClick={() => navigate('/demo')}>
-                  See a live demo
-                </Button>
-                <Button asChild variant="secondary" size="lg">
-                  <a href="/register">Set up your business</a>
-                </Button>
-              </div>
+            <Actions />
+            <div className="ob-hero-points">
+              <span>✓ Business-approved facts</span>
+              <span>✓ Humans stay in control</span>
             </div>
           </div>
+          <figure className="ob-flow-figure ob-enter ob-enter-delay">
+            <img src={`${ASSET}onebridge-flow.svg`} alt="Business documents, CSV files, and an existing website flow through OneBridge AI and owner review into an optimized website and MCP connection. The platform supports updates, review, and activity." />
+          </figure>
+        </section>
 
-          <div className="flex flex-col gap-4">
-            <div className="rounded-card border border-border bg-white p-5 shadow-card">
-              <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-secondary">
-                Website for people &middot; Demo example
-              </p>
-              <div className="rounded-lg border border-border bg-gray p-4">
-                <p className="font-bold text-navy">Jorge's Auto Parts</p>
-                <div className="mt-2 flex items-center justify-between text-sm">
-                  <span className="text-navy">Front Brake Rotor</span>
-                  <span className="font-semibold text-navy">$49.99</span>
+        <section className="ob-context-strip" aria-label="Businesses we serve">
+          <div className="ob-container">
+            <span>BUILT AROUND LOCAL BUSINESSES</span>
+            <div><span>Retailers</span><i /><span>Restaurants</span><i /><span>Specialty shops</span><i /><span>Service businesses</span></div>
+          </div>
+        </section>
+
+        <section className="ob-story-new ob-container" aria-labelledby="story-title">
+          <div className="ob-story-heading">
+            <div>
+              <p className="ob-eyebrow">A WIN FOR BOTH SIDES</p>
+              <h2 id="story-title">Local businesses get a voice.<br />Customers get better information.</h2>
+            </div>
+            <p className="ob-body">The challenge is trustworthy AI product discovery: helping businesses be visible and accurately represented, while helping customers make better decisions.</p>
+          </div>
+          <img className="ob-people-scene" src={`${ASSET}jorge-and-maria-v2.png`} alt="Illustrated Jorge at his local auto parts store and Maria using her phone to find a brake rotor, connected through OneBridge." loading="lazy" />
+          <div className="ob-benefit-grid">
+            <article>
+              <span className="ob-benefit-label">FOR OWNERS LIKE JORGE</span>
+              <h3>Your expertise, made accessible.</h3>
+              <p>Jorge knows his products, prices, and inventory. OneBridge helps him share approved facts with people and compatible AI systems, without becoming an engineer.</p>
+            </article>
+            <article>
+              <span className="ob-benefit-label">FOR CUSTOMERS LIKE MARIA</span>
+              <h3>Better facts for a better choice.</h3>
+              <p>Maria needs the right part, at the right price. Current compatibility and availability information helps her avoid wasted time, money, and misleading answers.</p>
+            </article>
+          </div>
+        </section>
+
+        <section id="how-it-works" className="ob-how ob-container" aria-labelledby="how-title">
+          <div className="ob-section-heading">
+            <div><p className="ob-eyebrow">HOW DO WE DO IT?</p><h2 id="how-title">The technical solution, made simple.</h2></div>
+            <p>You manage the information.<br />OneBridge connects the pieces.</p>
+          </div>
+          <div className="ob-steps">
+            {steps.map((step, index) => (
+              <article className="ob-step" key={step.title}>
+                <div className="ob-step-top">
+                  <span className="ob-step-art"><img src={`${ASSET}step-${index + 1}.svg`} alt="" width="100" height="80" loading="lazy" /></span>
+                  <span className="ob-step-number">{String(index + 1).padStart(2, '0')}</span>
                 </div>
-                <p className="mt-1 text-xs text-secondary">2015-2020 Honda Civic &middot; In stock</p>
-              </div>
-            </div>
+                <h3>{step.title}</h3>
+                <p>{step.body}</p>
+              </article>
+            ))}
+          </div>
+          <div className="ob-trust-note"><span aria-hidden="true">✓</span><p><strong>Truth before visibility.</strong> OneBridge helps make approved information accessible. It does not guarantee recommendations or independently certify every merchant claim.</p></div>
+        </section>
 
-            <div className="rounded-card border border-border bg-navy p-5 shadow-card">
-              <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-white/60">
-                MCP for AI assistants &middot; Demo example
-              </p>
-              <pre className="overflow-x-auto rounded-lg bg-white/5 p-4 text-xs leading-relaxed text-white/90">
-{`{
-  "name": "Front Brake Rotor",
-  "price": "$49.99",
-  "available": true,
-  "compatibility": "2015-2020 Honda Civic"
-}`}
-              </pre>
-            </div>
+        <section id="for-judges" className="ob-judge-simple ob-container" aria-labelledby="judges-title">
+          <p className="ob-eyebrow">FOR THE JUDGES</p>
+          <h2 id="judges-title">Two ways to explore OneBridge.</h2>
+          <p className="ob-body">Follow Jorge’s guided live demo, or try setting up a business yourself.</p>
+          <Actions />
+        </section>
+
+        <section className="ob-judge-resources-section ob-container" aria-labelledby="resources-title">
+          <div className="ob-judge-resources-heading">
+            <p className="ob-eyebrow">EXPLORE THE WORKING PROTOTYPE</p>
+            <h2 id="resources-title">See what OneBridge publishes.</h2>
+            <p className="ob-body">Open the generated website, structured information, and accuracy check directly.</p>
+          </div>
+          <div className="ob-judge-resource-grid">
+            {judgeLinks.map((link) => (
+              <a className="ob-resource" key={link.href} href={link.href}>
+                <span className="ob-resource-icon" aria-hidden="true">↗</span>
+                <span><strong>{link.label}</strong><small>{link.description}</small></span>
+              </a>
+            ))}
           </div>
         </section>
 
-        <section className="grid grid-cols-1 gap-6 border-t border-border py-10 sm:grid-cols-3">
-          {proofPoints.map((point) => (
-            <div key={point.title}>
-              <p className="font-bold text-navy">{point.title}</p>
-              <p className="mt-1 text-sm text-secondary">{point.body}</p>
-            </div>
-          ))}
-        </section>
-
-        <section className="border-t border-border py-10">
-          <Card>
-            <CardHeader>
-              <CardTitle>For judges</CardTitle>
-              <CardDescription>
-                Direct links into the live prototype, for reviewing without a walkthrough.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ul className="flex flex-col gap-3">
-                {judgeLinks.map((link) => (
-                  <li key={link.href}>
-                    <a
-                      href={link.href}
-                      className="font-semibold text-action-blue underline-offset-4 hover:underline"
-                    >
-                      {link.label}
-                    </a>
-                    <p className="text-sm text-secondary">{link.description}</p>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
+        <section className="ob-final ob-container">
+          <div><p className="ob-eyebrow">YOUR BUSINESS. YOUR INFORMATION.</p><h2>Make your next connection.</h2><p>See the idea in action, or start with what your business already knows.</p></div>
+          <Actions />
         </section>
       </main>
 
-      <footer className="border-t border-border py-8">
-        <div className="mx-auto flex max-w-[1120px] flex-col items-center gap-2 px-6 text-center text-sm text-secondary sm:flex-row sm:justify-between sm:text-left">
-          <p>OneBridge: The Trusted Connection. A working prototype, not a finished product.</p>
-          <a
-            href="https://github.com/jucax/SU_TECH_09302026"
-            className="text-action-blue underline-offset-4 hover:underline"
-          >
-            Source on GitHub
-          </a>
-        </div>
+      <footer className="ob-footer ob-container">
+        <div><img src="/brand/logo-primary.png" alt="OneBridge" /><p>The Trusted Connection.</p></div>
+        <div><p>Southwestern University · HSI Battle of the Brains 2026</p><p>A working prototype with example data.</p></div>
+        <a href="https://github.com/jucax/SU_TECH_09302026">Source on GitHub ↗</a>
       </footer>
     </div>
   )
