@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/images/onebridge-logo.png" alt="OneBridge, The Trusted Connection" width="360">
+</p>
+
 # OneBridge: The Trusted Connection
 
 **Southwestern University · 2026 HSI Battle of the Brains · Technology Solution (`SU_TECH_09302026`)**
