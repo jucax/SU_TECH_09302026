@@ -1,21 +1,26 @@
+import { Route, Routes } from 'react-router-dom'
+
+import { Landing } from '@/pages/Landing'
+import { Placeholder } from '@/pages/Placeholder'
+
 function App() {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-gray">
-      <div className="text-center">
-        <h1 className="text-4xl font-extrabold text-navy">OneBridge</h1>
-        <p className="mt-2 text-navy/70">
-          Scaffold placeholder. Landing page lands in slice M3.
-        </p>
-        <div className="mt-4 flex justify-center gap-2">
-          <span className="rounded-full bg-blue px-3 py-1 text-sm font-medium text-white">
-            Bridge Blue
-          </span>
-          <span className="rounded-full bg-orange px-3 py-1 text-sm font-medium text-white">
-            Connection Orange
-          </span>
-        </div>
-      </div>
-    </main>
+    <Routes>
+      <Route path="/" element={<Landing />} />
+      <Route path="/login" element={<Placeholder title="Log in" slice="M11" />} />
+      <Route path="/register" element={<Placeholder title="Set up your business" slice="M11" />} />
+      <Route path="/setup" element={<Placeholder title="Setup wizard" slice="M11" />} />
+      <Route path="/dashboard" element={<Placeholder title="Dashboard" slice="M4" />} />
+      <Route
+        path="/dashboard/monitoring"
+        element={<Placeholder title="AI visibility monitoring" slice="M8" />}
+      />
+      <Route
+        path="/dashboard/review"
+        element={<Placeholder title="Governance review queue" slice="M9" />}
+      />
+      <Route path="*" element={<Placeholder title="Not found" slice="-" />} />
+    </Routes>
   )
 }
 
