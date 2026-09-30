@@ -82,8 +82,8 @@ export function Landing() {
         <nav className="ob-nav" aria-label="Main navigation">
           <a className="ob-nav-detail" href="#our-story">Our Story</a>
           <a className="ob-nav-detail" href="#how-it-works">How It Works</a>
-          <a className="ob-nav-detail" href="#pricing">Pricing</a>
           <a className="ob-nav-detail" href="#core-values">Core Values</a>
+          <a className="ob-nav-detail" href="#pricing">Pricing</a>
           <Link to="/login">Log in</Link>
           <Link className="ob-button ob-button-small ob-button-outline" to="/register">Set Up Your Business</Link>
         </nav>
@@ -158,6 +158,25 @@ export function Landing() {
           <div className="ob-trust-note"><span aria-hidden="true">✓</span><p><strong>Truth before visibility.</strong> OneBridge helps make approved information accessible. It does not guarantee recommendations or independently certify every merchant claim.</p></div>
         </section>
 
+        <section id="core-values" className="ob-values-section" aria-labelledby="values-title">
+          <div className="ob-container">
+            <div className="ob-values-heading">
+              <p className="ob-eyebrow">WHAT GUIDES US</p>
+              <h2 id="values-title">Core values, built into every connection.</h2>
+              <p>The way we connect business information to AI matters as much as the technology itself.</p>
+            </div>
+            <ol className="ob-values-list">
+              {coreValues.map(({ title, body, icon: Icon }, index) => (
+                <li className="ob-value-row" key={title}>
+                  <span className="ob-value-number">0{index + 1}</span>
+                  <div className="ob-value-copy"><h3>{title}</h3><p>{body}</p></div>
+                  <span className="ob-value-icon"><Icon size={26} strokeWidth={1.6} /></span>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </section>
+
         <section id="pricing" className="ob-pricing ob-container" aria-labelledby="pricing-title">
           <div className="ob-pricing-heading">
             <p className="ob-eyebrow">PRICING</p>
@@ -177,25 +196,6 @@ export function Landing() {
               <Link className="ob-button ob-button-primary" to="/register">Set Up Your Business <span aria-hidden="true">→</span></Link>
             </div>
           </article>
-        </section>
-
-        <section id="core-values" className="ob-values-section" aria-labelledby="values-title">
-          <div className="ob-container">
-            <div className="ob-values-heading">
-              <p className="ob-eyebrow">WHAT GUIDES US</p>
-              <h2 id="values-title">Core values, built into every connection.</h2>
-              <p>The way we connect business information to AI matters as much as the technology itself.</p>
-            </div>
-            <ol className="ob-values-list">
-              {coreValues.map(({ title, body, icon: Icon }, index) => (
-                <li className="ob-value-row" key={title}>
-                  <span className="ob-value-number">0{index + 1}</span>
-                  <div className="ob-value-copy"><h3>{title}</h3><p>{body}</p></div>
-                  <span className="ob-value-icon"><Icon size={26} strokeWidth={1.6} /></span>
-                </li>
-              ))}
-            </ol>
-          </div>
         </section>
 
         <section className="ob-final ob-container">
