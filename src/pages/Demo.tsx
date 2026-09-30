@@ -1,12 +1,25 @@
-import { FileText, Server, ShieldCheck } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import {
+  Check,
+  FileSpreadsheet,
+  FileText,
+  Globe,
+  ImagePlus,
+  type LucideIcon,
+  Pencil,
+  Plus,
+  Server,
+  ShieldCheck,
+  Trash2,
+  X,
+} from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { parseProductsCsv } from '@lib/csv'
 import { formatPriceCents } from '@lib/format'
-import type { HoursEntry, Product } from '@lib/schemas'
+import type { HoursEntry, Policy, Product } from '@lib/schemas'
 
 const LAST_TENANT_KEY = 'onebridge:lastTenantSlug'
 const BUSINESS_NAME = "Jorge's Auto Parts"
@@ -16,7 +29,7 @@ const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Frid
 // PDF itself would need real document parsing, which is planned, not built
 // (see docs/PLAN.md's ingestion scope note) -- this walkthrough hardcodes the
 // same facts the PDF states, rather than claiming an OCR step that doesn't
-// exist.
+// exist. Both are editable below, same as a real owner reviewing the record.
 const DEMO_HOURS: HoursEntry[] = [
   { dayOfWeek: 0, opensAt: null, closesAt: null, closed: true },
   { dayOfWeek: 1, opensAt: '08:00', closesAt: '18:00', closed: false },
@@ -26,7 +39,7 @@ const DEMO_HOURS: HoursEntry[] = [
   { dayOfWeek: 5, opensAt: '08:00', closesAt: '19:00', closed: false },
   { dayOfWeek: 6, opensAt: '09:00', closesAt: '15:00', closed: false },
 ]
-const DEMO_POLICIES = [
+const DEMO_POLICIES: Policy[] = [
   {
     kind: 'returns',
     body: 'Unused parts in original packaging may be returned within 30 days with a receipt for a full refund. Electrical parts and special orders are final sale.',
@@ -44,7 +57,7 @@ const DEMO_POLICIES = [
 // Jorge supplied an existing website, so a real cleaning pass would also look
 // for brand color/logo material there. He doesn't have a usable logo, which
 // this list says plainly rather than silently skipping it -- a real owner in
-// this position would be asked to upload one.
+// this position would be asked to upload one (see the Logo card in setup).
 const CLEANING_STEPS = [
   'Cleaning the data',
   'Finding relationships between items',
@@ -62,6 +75,13 @@ const BRIDGE_STEPS = [
 ]
 
 type Scene = 'intro' | 'sources' | 'cleaning' | 'setup' | 'bridging' | 'reveal'
+
+interface ProductDraft {
+  name: string
+  price: string
+  compatibility: string
+  available: boolean
+}
 
 function Note({ children }: { children: React.ReactNode }) {
   return (
@@ -83,8 +103,49 @@ function StepList({ steps, current }: { steps: string[]; current: number }) {
   )
 }
 
+function SourceTile({
+  href,
+  download,
+  icon: Icon,
+  title,
+  description,
+}: {
+  href: string
+  download?: boolean
+  icon: LucideIcon
+  title: string
+  description: string
+}) {
+  const url = typeof window !== 'undefined' ? `${window.location.origin}${href}` : href
+  return (
+    <a
+      href={href}
+      download={download}
+      target={download ? undefined : '_blank'}
+      rel={download ? undefined : 'noreferrer'}
+      className="flex flex-col items-center gap-2 rounded-lg border border-border bg-white p-4 text-center transition-colors hover:border-action-blue/40 hover:bg-subtle-blue/40"
+    >
+      <Icon className="h-6 w-6 text-action-blue" aria-hidden="true" />
+      <span className="text-sm font-semibold text-navy">{title}</span>
+      <span className="text-xs text-secondary">{description}</span>
+      <span className="mt-1 break-all font-mono text-[11px] text-secondary/80">{url}</span>
+    </a>
+  )
+}
+
+function iconButtonClass(variant: 'neutral' | 'danger' = 'neutral') {
+  return `inline-flex h-8 w-8 items-center justify-center rounded-full border border-border bg-white ${
+    variant === 'danger' ? 'text-error hover:bg-error-surface' : 'text-secondary hover:bg-subtle-blue hover:text-navy'
+  }`
+}
+
+const inputClass =
+  'rounded-[10px] border border-border bg-white px-3 py-2 text-sm text-navy focus:outline-none focus:ring-2 focus:ring-action-blue'
+
 export function Demo() {
   const navigate = useNavigate()
+  const logoInputRef = useRef<HTMLInputElement>(null)
+
   const [scene, setScene] = useState<Scene>('intro')
   const [products, setProducts] = useState<Array<Omit<Product, 'id'>>>([])
   const [csvError, setCsvError] = useState<string | null>(null)
@@ -92,6 +153,19 @@ export function Demo() {
   const [bridgeStep, setBridgeStep] = useState(0)
   const [bridgeError, setBridgeError] = useState<string | null>(null)
   const [slug, setSlug] = useState<string | null>(null)
+
+  const [hours, setHours] = useState<HoursEntry[]>(DEMO_HOURS)
+  const [policies, setPolicies] = useState<Policy[]>(DEMO_POLICIES)
+  const [logoUrl, setLogoUrl] = useState<string | null>(null)
+
+  const [editingProductIndex, setEditingProductIndex] = useState<number | null>(null)
+  const [productDraft, setProductDraft] = useState<ProductDraft | null>(null)
+
+  const [editingHours, setEditingHours] = useState(false)
+  const [hoursDraft, setHoursDraft] = useState<HoursEntry[]>(DEMO_HOURS)
+
+  const [editingPolicies, setEditingPolicies] = useState(false)
+  const [policiesDraft, setPoliciesDraft] = useState<Policy[]>(DEMO_POLICIES)
 
   useEffect(() => {
     fetch('/demo/jorges-inventory.csv')
@@ -116,10 +190,112 @@ export function Demo() {
     setScene('setup')
   }
 
+  function startEditProduct(index: number) {
+    const p = products[index]
+    setProductDraft({
+      name: p.name,
+      price: (p.priceCents / 100).toFixed(2),
+      compatibility: p.compatibility ?? '',
+      available: p.available,
+    })
+    setEditingProductIndex(index)
+  }
+
+  function addProduct() {
+    const index = products.length
+    setProducts((prev) => [
+      ...prev,
+      { name: '', priceCents: 0, currency: 'USD', available: true, compatibility: null, description: null },
+    ])
+    setProductDraft({ name: '', price: '0.00', compatibility: '', available: true })
+    setEditingProductIndex(index)
+  }
+
+  function saveProduct() {
+    if (editingProductIndex === null || !productDraft) return
+    const priceNum = Number(productDraft.price)
+    if (!productDraft.name.trim() || !Number.isFinite(priceNum) || priceNum < 0) return
+    setProducts((prev) =>
+      prev.map((p, i) =>
+        i === editingProductIndex
+          ? {
+              ...p,
+              name: productDraft.name.trim(),
+              priceCents: Math.round(priceNum * 100),
+              compatibility: productDraft.compatibility.trim() || null,
+              available: productDraft.available,
+            }
+          : p,
+      ),
+    )
+    setEditingProductIndex(null)
+    setProductDraft(null)
+  }
+
+  function cancelEditProduct(index: number) {
+    setEditingProductIndex(null)
+    setProductDraft(null)
+    // A row added via "Add product" and cancelled before its first save has
+    // nothing worth keeping.
+    if (products[index] && !products[index].name.trim()) {
+      setProducts((prev) => prev.filter((_, i) => i !== index))
+    }
+  }
+
+  function removeProduct(index: number) {
+    setProducts((prev) => prev.filter((_, i) => i !== index))
+    if (editingProductIndex === index) {
+      setEditingProductIndex(null)
+      setProductDraft(null)
+    }
+  }
+
+  function startEditHours() {
+    setHoursDraft(hours)
+    setEditingHours(true)
+  }
+
+  function updateHoursDraft(dayOfWeek: number, patch: Partial<HoursEntry>) {
+    setHoursDraft((prev) => prev.map((h) => (h.dayOfWeek === dayOfWeek ? { ...h, ...patch } : h)))
+  }
+
+  function saveHours() {
+    setHours(hoursDraft)
+    setEditingHours(false)
+  }
+
+  function startEditPolicies() {
+    setPoliciesDraft(policies)
+    setEditingPolicies(true)
+  }
+
+  function updatePolicyDraft(index: number, patch: Partial<Policy>) {
+    setPoliciesDraft((prev) => prev.map((p, i) => (i === index ? { ...p, ...patch } : p)))
+  }
+
+  function addPolicyDraft() {
+    setPoliciesDraft((prev) => [...prev, { kind: '', body: '' }])
+  }
+
+  function removePolicyDraft(index: number) {
+    setPoliciesDraft((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  function savePolicies() {
+    setPolicies(policiesDraft.filter((p) => p.kind.trim() && p.body.trim()))
+    setEditingPolicies(false)
+  }
+
+  function handleLogoFile(file: File) {
+    setLogoUrl(URL.createObjectURL(file))
+  }
+
   async function handleBridge() {
     setScene('bridging')
     setBridgeError(null)
     setBridgeStep(0)
+
+    const publishableProducts = products.filter((p) => p.name.trim())
 
     const pacing = (async () => {
       for (let i = 0; i < BRIDGE_STEPS.length; i++) {
@@ -141,7 +317,7 @@ export function Demo() {
       const publishRes = await fetch('/api/setup-publish', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ slug: newSlug, products, hours: DEMO_HOURS, policies: DEMO_POLICIES }),
+        body: JSON.stringify({ slug: newSlug, products: publishableProducts, hours, policies }),
       })
       const publishBody = await publishRes.json()
       if (!publishRes.ok) throw new Error(publishBody.error ?? 'Could not publish the business')
@@ -199,53 +375,25 @@ export function Demo() {
               sent over — OneBridge doesn't require any particular format to get started.
             </Note>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Inventory</CardTitle>
-                  <CardDescription>A spreadsheet Jorge exported from his register.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <a
-                    href="/demo/jorges-inventory.csv"
-                    download
-                    className="text-sm font-semibold text-action-blue underline underline-offset-4"
-                  >
-                    Download jorges-inventory.csv
-                  </a>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Hours & policies</CardTitle>
-                  <CardDescription>A sheet Jorge typed up himself.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <a
-                    href="/demo/jorges-hours-and-policies.pdf"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-sm font-semibold text-action-blue underline underline-offset-4"
-                  >
-                    Open jorges-hours-and-policies.pdf
-                  </a>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Current website</CardTitle>
-                  <CardDescription>Built years ago, rarely updated.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <a
-                    href="/demo/jorges-old-site.html"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-sm font-semibold text-action-blue underline underline-offset-4"
-                  >
-                    View Jorge's current site
-                  </a>
-                </CardContent>
-              </Card>
+              <SourceTile
+                href="/demo/jorges-inventory.csv"
+                download
+                icon={FileSpreadsheet}
+                title="Inventory"
+                description="A spreadsheet Jorge exported from his register."
+              />
+              <SourceTile
+                href="/demo/jorges-hours-and-policies.pdf"
+                icon={FileText}
+                title="Hours & policies"
+                description="A sheet Jorge typed up himself."
+              />
+              <SourceTile
+                href="/demo/jorges-old-site.html"
+                icon={Globe}
+                title="Current website"
+                description="Built years ago, rarely updated."
+              />
             </div>
             <div>
               <Button onClick={handleContinueToSetup}>Continue to setup</Button>
@@ -278,8 +426,8 @@ export function Demo() {
             </div>
             <Note>
               This is the same setup screen used when a business registers, already filled in from
-              what we just read. Everything below is editable, and nothing goes live until you
-              click Bridge.
+              what we just read. Everything below is editable, so Jorge can fix anything the
+              cleaning step got wrong before it ever goes live.
             </Note>
 
             {csvError && <p className="text-sm text-error">{csvError}</p>}
@@ -288,60 +436,312 @@ export function Demo() {
             <Card>
               <CardHeader>
                 <CardTitle>Products ({products.length})</CardTitle>
-                <CardDescription>Parsed from jorges-inventory.csv.</CardDescription>
+                <CardDescription>
+                  Parsed from jorges-inventory.csv. Fix anything the parser got wrong, or add one by
+                  hand.
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <ul className="flex flex-col divide-y divide-border">
-                  {products.map((p, i) => (
-                    <li key={i} className="flex items-center justify-between py-2 text-sm">
-                      <div>
-                        <span className="text-navy">{p.name}</span>
-                        {p.compatibility && <span className="text-secondary"> — {p.compatibility}</span>}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold text-navy">{formatPriceCents(p.priceCents)}</span>
-                        <span className={p.available ? 'text-secondary' : 'text-orange'}>
-                          {p.available ? 'In stock' : 'Unavailable'}
+                  {products.map((p, i) =>
+                    editingProductIndex === i && productDraft ? (
+                      <li key={i} className="flex flex-col gap-2 py-3">
+                        <div className="flex flex-wrap gap-2">
+                          <input
+                            type="text"
+                            placeholder="Product name"
+                            value={productDraft.name}
+                            onChange={(e) => setProductDraft({ ...productDraft, name: e.target.value })}
+                            className={`${inputClass} flex-1`}
+                            autoFocus
+                          />
+                          <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            placeholder="Price"
+                            value={productDraft.price}
+                            onChange={(e) => setProductDraft({ ...productDraft, price: e.target.value })}
+                            className={`${inputClass} w-28`}
+                          />
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <input
+                            type="text"
+                            placeholder="Compatibility (optional)"
+                            value={productDraft.compatibility}
+                            onChange={(e) => setProductDraft({ ...productDraft, compatibility: e.target.value })}
+                            className={`${inputClass} flex-1`}
+                          />
+                          <label className="flex items-center gap-1.5 whitespace-nowrap text-sm text-navy">
+                            <input
+                              type="checkbox"
+                              checked={productDraft.available}
+                              onChange={(e) => setProductDraft({ ...productDraft, available: e.target.checked })}
+                            />
+                            In stock
+                          </label>
+                          <button
+                            type="button"
+                            onClick={saveProduct}
+                            aria-label="Save product"
+                            className={iconButtonClass()}
+                          >
+                            <Check className="h-4 w-4" aria-hidden="true" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => cancelEditProduct(i)}
+                            aria-label="Cancel editing"
+                            className={iconButtonClass()}
+                          >
+                            <X className="h-4 w-4" aria-hidden="true" />
+                          </button>
+                        </div>
+                      </li>
+                    ) : (
+                      <li key={i} className="flex items-center justify-between gap-3 py-2 text-sm">
+                        <div className="min-w-0">
+                          <span className="text-navy">{p.name || '(unnamed product)'}</span>
+                          {p.compatibility && <span className="text-secondary"> — {p.compatibility}</span>}
+                        </div>
+                        <div className="flex shrink-0 items-center gap-3">
+                          <span className="font-semibold text-navy">{formatPriceCents(p.priceCents)}</span>
+                          <span className={p.available ? 'text-secondary' : 'text-orange'}>
+                            {p.available ? 'In stock' : 'Unavailable'}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => startEditProduct(i)}
+                            aria-label={`Edit ${p.name}`}
+                            disabled={editingProductIndex !== null}
+                            className={`${iconButtonClass()} disabled:opacity-40`}
+                          >
+                            <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => removeProduct(i)}
+                            aria-label={`Remove ${p.name}`}
+                            disabled={editingProductIndex !== null}
+                            className={`${iconButtonClass('danger')} disabled:opacity-40`}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+                          </button>
+                        </div>
+                      </li>
+                    ),
+                  )}
+                </ul>
+                <button
+                  type="button"
+                  onClick={addProduct}
+                  disabled={editingProductIndex !== null}
+                  className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-action-blue disabled:opacity-40"
+                >
+                  <Plus className="h-4 w-4" aria-hidden="true" /> Add product
+                </button>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between gap-4">
+                <div>
+                  <CardTitle>Hours</CardTitle>
+                  <CardDescription>From jorges-hours-and-policies.pdf.</CardDescription>
+                </div>
+                {!editingHours && (
+                  <button
+                    type="button"
+                    onClick={startEditHours}
+                    aria-label="Edit hours"
+                    className={iconButtonClass()}
+                  >
+                    <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
+                  </button>
+                )}
+              </CardHeader>
+              <CardContent>
+                {editingHours ? (
+                  <div className="flex flex-col gap-2">
+                    <ul className="flex flex-col gap-2">
+                      {hoursDraft.map((h) => (
+                        <li key={h.dayOfWeek} className="flex flex-wrap items-center gap-3 text-sm">
+                          <span className="w-24 text-navy">{DAY_NAMES[h.dayOfWeek]}</span>
+                          <label className="flex items-center gap-1.5 text-secondary">
+                            <input
+                              type="checkbox"
+                              checked={h.closed}
+                              onChange={(e) => updateHoursDraft(h.dayOfWeek, { closed: e.target.checked })}
+                            />
+                            Closed
+                          </label>
+                          {!h.closed && (
+                            <>
+                              <input
+                                type="time"
+                                value={h.opensAt ?? ''}
+                                onChange={(e) => updateHoursDraft(h.dayOfWeek, { opensAt: e.target.value })}
+                                className={inputClass}
+                              />
+                              <span className="text-secondary">to</span>
+                              <input
+                                type="time"
+                                value={h.closesAt ?? ''}
+                                onChange={(e) => updateHoursDraft(h.dayOfWeek, { closesAt: e.target.value })}
+                                className={inputClass}
+                              />
+                            </>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                    <div className="mt-1 flex gap-2">
+                      <Button size="sm" onClick={saveHours}>
+                        Save hours
+                      </Button>
+                      <Button size="sm" variant="secondary" onClick={() => setEditingHours(false)}>
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <ul className="grid grid-cols-2 gap-x-8 gap-y-1 text-sm sm:grid-cols-1">
+                    {hours.map((h) => (
+                      <li key={h.dayOfWeek} className="flex justify-between gap-4">
+                        <span className="text-navy">{DAY_NAMES[h.dayOfWeek]}</span>
+                        <span className="text-secondary">
+                          {h.closed ? 'Closed' : `${h.opensAt} – ${h.closesAt}`}
                         </span>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </CardContent>
             </Card>
 
             <Card>
-              <CardHeader>
-                <CardTitle>Hours</CardTitle>
-                <CardDescription>From jorges-hours-and-policies.pdf.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ul className="grid grid-cols-2 gap-x-8 gap-y-1 text-sm sm:grid-cols-1">
-                  {DEMO_HOURS.map((h) => (
-                    <li key={h.dayOfWeek} className="flex justify-between gap-4">
-                      <span className="text-navy">{DAY_NAMES[h.dayOfWeek]}</span>
-                      <span className="text-secondary">
-                        {h.closed ? 'Closed' : `${h.opensAt} – ${h.closesAt}`}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
+              <CardHeader className="flex flex-row items-center justify-between gap-4">
                 <CardTitle>Policies</CardTitle>
+                {!editingPolicies && (
+                  <button
+                    type="button"
+                    onClick={startEditPolicies}
+                    aria-label="Edit policies"
+                    className={iconButtonClass()}
+                  >
+                    <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
+                  </button>
+                )}
               </CardHeader>
               <CardContent>
-                <ul className="flex flex-col gap-3">
-                  {DEMO_POLICIES.map((p) => (
-                    <li key={p.kind}>
-                      <p className="text-sm font-semibold capitalize text-navy">{p.kind}</p>
-                      <p className="text-sm text-secondary">{p.body}</p>
-                    </li>
-                  ))}
-                </ul>
+                {editingPolicies ? (
+                  <div className="flex flex-col gap-3">
+                    {policiesDraft.map((p, i) => (
+                      <div key={i} className="flex flex-col gap-1.5 rounded-lg border border-border p-3">
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            placeholder="Policy name, e.g. returns"
+                            value={p.kind}
+                            onChange={(e) => updatePolicyDraft(i, { kind: e.target.value })}
+                            className={`${inputClass} flex-1`}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removePolicyDraft(i)}
+                            aria-label="Remove policy"
+                            className={iconButtonClass('danger')}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+                          </button>
+                        </div>
+                        <textarea
+                          value={p.body}
+                          onChange={(e) => updatePolicyDraft(i, { body: e.target.value })}
+                          rows={2}
+                          className={`${inputClass} w-full`}
+                        />
+                      </div>
+                    ))}
+                    <div className="flex flex-wrap items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={addPolicyDraft}
+                        className="inline-flex items-center gap-1.5 text-sm font-semibold text-action-blue"
+                      >
+                        <Plus className="h-4 w-4" aria-hidden="true" /> Add policy
+                      </button>
+                      <Button size="sm" onClick={savePolicies}>
+                        Save policies
+                      </Button>
+                      <Button size="sm" variant="secondary" onClick={() => setEditingPolicies(false)}>
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <ul className="flex flex-col gap-3">
+                    {policies.map((p) => (
+                      <li key={p.kind}>
+                        <p className="text-sm font-semibold capitalize text-navy">{p.kind}</p>
+                        <p className="text-sm text-secondary">{p.body}</p>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Logo</CardTitle>
+                <CardDescription>
+                  We didn't find a usable logo on Jorge's old site, same as the cleaning step said.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <input
+                  ref={logoInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => e.target.files?.[0] && handleLogoFile(e.target.files[0])}
+                />
+                {logoUrl ? (
+                  <div className="flex flex-wrap items-center gap-4">
+                    <div className="flex h-20 items-center rounded-lg border border-border bg-white px-4">
+                      <img src={logoUrl} alt="Jorge's Auto Parts logo" className="h-14 w-auto object-contain" />
+                    </div>
+                    <div className="flex gap-2">
+                      <Button size="sm" variant="secondary" onClick={() => logoInputRef.current?.click()}>
+                        Replace logo
+                      </Button>
+                      <Button size="sm" variant="secondary" onClick={() => setLogoUrl(null)}>
+                        Remove
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center gap-3 rounded-lg border-2 border-dashed border-border bg-gray px-4 py-6 text-center">
+                    <ImagePlus className="h-6 w-6 text-secondary" aria-hidden="true" />
+                    <p className="text-sm text-secondary">
+                      Add one to complete Jorge's brand identity on the new site.
+                    </p>
+                    <div className="flex flex-wrap justify-center gap-2">
+                      <Button size="sm" onClick={() => logoInputRef.current?.click()}>
+                        Upload a logo
+                      </Button>
+                      <Button size="sm" variant="secondary" onClick={() => setLogoUrl('/demo/jorges-logo.svg')}>
+                        Use Jorge's logo
+                      </Button>
+                    </div>
+                  </div>
+                )}
+                <p className="mt-3 text-xs text-secondary">
+                  This prototype's published record doesn't store a logo yet, so it won't appear on
+                  the generated site below — shown here to complete what the setup screen asks for.
+                </p>
               </CardContent>
             </Card>
 
@@ -351,7 +751,11 @@ export function Demo() {
                   This takes Jorge's sources and turns them into an improved website and an MCP
                   server, from the same verified record.
                 </p>
-                <Button variant="action" onClick={handleBridge} disabled={products.length === 0}>
+                <Button
+                  variant="action"
+                  onClick={handleBridge}
+                  disabled={products.filter((p) => p.name.trim()).length === 0 || editingProductIndex !== null}
+                >
                   Bridge
                 </Button>
               </CardContent>

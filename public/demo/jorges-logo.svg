@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 340 90" width="340" height="90" role="img" aria-label="Jorge's Auto Parts logo">
+  <rect x="4" y="5" width="80" height="80" rx="14" fill="#1C1F26"/>
+  <text x="44" y="63" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="800" font-size="44" fill="#D93A2B">J</text>
+  <text x="100" y="46" font-family="Arial, Helvetica, sans-serif" font-weight="800" font-size="27" fill="#1C1F26">Jorge's Auto Parts</text>
+  <text x="100" y="67" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="12" letter-spacing="2.5" fill="#6B7280">PARTS &#183; SERVICE &#183; ADVICE</text>
+  <rect x="100" y="74" width="40" height="4" fill="#D93A2B"/>
+</svg>
