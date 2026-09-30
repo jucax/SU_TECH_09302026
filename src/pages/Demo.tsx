@@ -1,5 +1,8 @@
 import {
+  ArrowDown,
+  ArrowRight,
   Check,
+  CircleHelp,
   FileSpreadsheet,
   FileText,
   Globe,
@@ -140,6 +143,40 @@ function SourceTile({
   )
 }
 
+// A tap-to-toggle explainer for judges/owners who aren't developers, next to
+// each AI-facing element in the reveal step. Click instead of hover so it
+// works on touch devices too, and it's a sibling of the tile's link/button
+// rather than nested inside it -- a <button> inside an <a> would double as a
+// broken nested-interactive-element and would navigate on every tap.
+function InfoTip({ label, children }: { label: string; children: React.ReactNode }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <span className="relative inline-flex">
+      <button
+        type="button"
+        onClick={(e) => {
+          e.preventDefault()
+          e.stopPropagation()
+          setOpen((o) => !o)
+        }}
+        aria-expanded={open}
+        aria-label={`What is ${label}?`}
+        className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-border bg-white text-secondary hover:border-action-blue hover:text-action-blue"
+      >
+        <CircleHelp className="h-3.5 w-3.5" aria-hidden="true" />
+      </button>
+      {open && (
+        <span
+          role="tooltip"
+          className="absolute left-1/2 top-full z-10 mt-2 w-56 -translate-x-1/2 rounded-lg border border-border bg-white p-3 text-left text-xs font-normal normal-case leading-snug text-navy shadow-card"
+        >
+          {children}
+        </span>
+      )}
+    </span>
+  )
+}
+
 function iconButtonClass(variant: 'neutral' | 'danger' = 'neutral') {
   return `inline-flex h-8 w-8 items-center justify-center rounded-full border border-border bg-white ${
     variant === 'danger' ? 'text-error hover:bg-error-surface' : 'text-secondary hover:bg-subtle-blue hover:text-navy'
@@ -192,7 +229,7 @@ export function Demo() {
     setCleaningStep(0)
     for (let i = 0; i < CLEANING_STEPS.length; i++) {
       setCleaningStep(i)
-      await new Promise((r) => setTimeout(r, 700))
+      await new Promise((r) => setTimeout(r, 1400))
     }
     setScene('setup')
   }
@@ -327,7 +364,7 @@ export function Demo() {
     const pacing = (async () => {
       for (let i = 0; i < BRIDGE_STEPS.length; i++) {
         setBridgeStep(i)
-        await new Promise((r) => setTimeout(r, 800))
+        await new Promise((r) => setTimeout(r, 1600))
       }
     })()
 
@@ -840,8 +877,8 @@ export function Demo() {
               <h1 className="text-2xl font-extrabold text-navy">One record, two front doors</h1>
             </div>
 
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <Card>
+            <div className="flex flex-col gap-4 md:flex-row md:items-stretch">
+              <Card className="md:flex-1">
                 <CardHeader>
                   <CardTitle>Before</CardTitle>
                   <CardDescription>Jorge's old website: stale prices, no structure.</CardDescription>
@@ -863,68 +900,106 @@ export function Demo() {
                 </CardContent>
               </Card>
 
-              <Card className="border-action-blue/30">
-                <CardHeader>
-                  <CardTitle>After: website for people</CardTitle>
-                  <CardDescription>Generated from the verified record just published.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <iframe
-                    src={`/site/${slug}`}
-                    title="Generated website"
-                    className="h-64 w-full rounded-lg border border-border"
-                  />
-                  <a
-                    href={`/site/${slug}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="mt-2 inline-block text-sm font-semibold text-action-blue underline underline-offset-4"
-                  >
-                    Open in a new tab
-                  </a>
-                </CardContent>
-              </Card>
-            </div>
+              <div className="flex items-center justify-center md:w-12 md:flex-none md:flex-col md:justify-around">
+                <ArrowDown className="h-6 w-6 text-action-blue md:hidden" aria-hidden="true" />
+                <ArrowRight className="hidden h-6 w-6 text-action-blue md:block" aria-hidden="true" />
+                <ArrowRight className="hidden h-6 w-6 text-action-blue md:block" aria-hidden="true" />
+              </div>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>After: connection for AI</CardTitle>
-                <CardDescription>The same record, structured for AI assistants.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                  <a
-                    href={`/site/${slug}/llms.txt`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex flex-col items-center gap-2 rounded-lg border border-border bg-gray p-4 text-center hover:border-action-blue/40"
-                  >
-                    <FileText className="h-6 w-6 text-action-blue" aria-hidden="true" />
-                    <span className="text-sm font-semibold text-navy">llms.txt</span>
-                    <span className="text-xs text-secondary">States the facts, in plain text</span>
-                  </a>
-                  <a
-                    href={`/site/${slug}/robots.txt`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex flex-col items-center gap-2 rounded-lg border border-border bg-gray p-4 text-center hover:border-action-blue/40"
-                  >
-                    <ShieldCheck className="h-6 w-6 text-action-blue" aria-hidden="true" />
-                    <span className="text-sm font-semibold text-navy">robots.txt</span>
-                    <span className="text-xs text-secondary">Welcomes AI crawlers by name</span>
-                  </a>
-                  <button
-                    type="button"
-                    onClick={() => navigate(`/dashboard?slug=${encodeURIComponent(slug)}`)}
-                    className="flex flex-col items-center gap-2 rounded-lg border border-action-blue bg-subtle-blue p-4 text-center hover:bg-subtle-blue/70"
-                  >
-                    <Server className="h-6 w-6 text-action-blue" aria-hidden="true" />
-                    <span className="text-sm font-semibold text-navy">MCP server</span>
-                    <span className="text-xs text-secondary">A live connection, not a document</span>
-                  </button>
-                </div>
-              </CardContent>
-            </Card>
+              <div className="flex flex-col gap-4 md:flex-1">
+                <Card className="border-action-blue/30">
+                  <CardHeader>
+                    <CardTitle>After: website for people</CardTitle>
+                    <CardDescription>Generated from the verified record just published.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="flex flex-col gap-4">
+                    <div>
+                      <iframe
+                        src={`/site/${slug}`}
+                        title="Generated website"
+                        className="h-64 w-full rounded-lg border border-border"
+                      />
+                      <a
+                        href={`/site/${slug}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="mt-2 inline-block text-sm font-semibold text-action-blue underline underline-offset-4"
+                      >
+                        Open in a new tab
+                      </a>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3 border-t border-border pt-4">
+                      <div className="relative flex flex-col items-center gap-1.5 rounded-lg border border-border bg-gray p-3 text-center hover:border-action-blue/40">
+                        <div className="absolute right-1.5 top-1.5">
+                          <InfoTip label="llms.txt">
+                            A plain-text page that states Jorge's real hours, prices, and policies
+                            in a format AI systems can read directly, instead of guessing from the
+                            website's design.
+                          </InfoTip>
+                        </div>
+                        <a
+                          href={`/site/${slug}/llms.txt`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex flex-col items-center gap-1.5"
+                        >
+                          <FileText className="h-5 w-5 text-action-blue" aria-hidden="true" />
+                          <span className="text-sm font-semibold text-navy">llms.txt</span>
+                          <span className="text-xs text-secondary">States the facts, in plain text</span>
+                        </a>
+                      </div>
+                      <div className="relative flex flex-col items-center gap-1.5 rounded-lg border border-border bg-gray p-3 text-center hover:border-action-blue/40">
+                        <div className="absolute right-1.5 top-1.5">
+                          <InfoTip label="robots.txt">
+                            Tells AI crawlers and search engines by name that they're welcome to
+                            read this site, instead of leaving them to guess whether they're
+                            allowed.
+                          </InfoTip>
+                        </div>
+                        <a
+                          href={`/site/${slug}/robots.txt`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex flex-col items-center gap-1.5"
+                        >
+                          <ShieldCheck className="h-5 w-5 text-action-blue" aria-hidden="true" />
+                          <span className="text-sm font-semibold text-navy">robots.txt</span>
+                          <span className="text-xs text-secondary">Welcomes AI crawlers by name</span>
+                        </a>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-action-blue/30 bg-subtle-blue">
+                  <CardHeader>
+                    <div className="flex items-center justify-between gap-2">
+                      <CardTitle>After: MCP server for AI</CardTitle>
+                      <InfoTip label="MCP server">
+                        A live connection AI assistants can plug into to ask this business
+                        questions directly and get the current answer, instead of just reading a
+                        static page that might be stale.
+                      </InfoTip>
+                    </div>
+                    <CardDescription>The same record, served as a live connection.</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <button
+                      type="button"
+                      onClick={() => navigate(`/dashboard?slug=${encodeURIComponent(slug)}`)}
+                      className="flex w-full items-center gap-3 rounded-lg border border-action-blue bg-white p-4 text-left hover:bg-subtle-blue/70"
+                    >
+                      <Server className="h-6 w-6 shrink-0 text-action-blue" aria-hidden="true" />
+                      <span>
+                        <span className="block text-sm font-semibold text-navy">MCP server</span>
+                        <span className="block text-xs text-secondary">A live connection, not a document — open in the dashboard</span>
+                      </span>
+                    </button>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
 
             <div>
               <Button onClick={() => navigate(`/dashboard?slug=${encodeURIComponent(slug)}`)}>
