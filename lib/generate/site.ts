@@ -8,6 +8,11 @@ import type { VerifiedRecord } from '../schemas.js'
 // so both crawlers and AI systems have a machine-readable version of the same
 // facts a human sees, and a footer pointing at llms.txt and the MCP endpoint
 // for anything looking for a more direct AI-facing connection.
+//
+// Styled per docs/WEBSITE_STYLE_PLAN.md section 8: a credible local-business
+// catalog, not an internal admin screen. Facts remain in the HTML with
+// JavaScript disabled; styling is a small inline stylesheet, not a Tailwind
+// build dependency this route doesn't have access to.
 
 const DAY_NAME_TO_SCHEMA_ORG = [
   'Sunday',
@@ -56,9 +61,10 @@ export function renderSiteHtml(record: VerifiedRecord, origin: string): string {
   const slug = record.profile.slug
   const structuredData = buildStructuredData(record, origin, slug)
 
-  const productsHtml = record.products
-    .map(
-      (p) => `
+  const productsHtml = record.products.length
+    ? record.products
+        .map(
+          (p) => `
       <li class="product">
         <div>
           <p class="product-name">${escapeHtml(p.name)}</p>
@@ -72,8 +78,9 @@ export function renderSiteHtml(record: VerifiedRecord, origin: string): string {
           }</p>
         </div>
       </li>`,
-    )
-    .join('')
+        )
+        .join('')
+    : '<li class="empty">No products published yet.</li>'
 
   const hoursHtml = [...record.hours]
     .sort((a, b) => a.dayOfWeek - b.dayOfWeek)
@@ -86,15 +93,17 @@ export function renderSiteHtml(record: VerifiedRecord, origin: string): string {
     )
     .join('')
 
-  const policiesHtml = record.policies
-    .map(
-      (p) => `
+  const policiesHtml = record.policies.length
+    ? record.policies
+        .map(
+          (p) => `
       <div class="policy">
         <h3>${escapeHtml(p.kind)}</h3>
         <p>${escapeHtml(p.body)}</p>
       </div>`,
-    )
-    .join('')
+        )
+        .join('')
+    : '<p class="empty">No policies published.</p>'
 
   return `<!doctype html>
 <html lang="en">
@@ -107,9 +116,10 @@ export function renderSiteHtml(record: VerifiedRecord, origin: string): string {
   <style>
     :root {
       --navy: #091D3F;
-      --blue: #408EEC;
       --orange: #F68835;
       --gray: #F5F6F8;
+      --border: #DFE6EF;
+      --secondary: #52627A;
     }
     * { box-sizing: border-box; }
     body {
@@ -118,71 +128,122 @@ export function renderSiteHtml(record: VerifiedRecord, origin: string): string {
       background: var(--gray);
       color: var(--navy);
     }
-    main { max-width: 720px; margin: 0 auto; padding: 48px 20px; }
-    h1 { font-size: 2rem; font-weight: 800; margin: 0 0 8px; }
-    h2 { font-size: 1.25rem; font-weight: 700; margin: 40px 0 12px; }
-    h3 { font-size: 1rem; font-weight: 700; margin: 0 0 4px; text-transform: capitalize; }
-    ul { list-style: none; margin: 0; padding: 0; }
-    section {
-      background: white;
-      border-radius: 16px;
-      padding: 8px 20px;
-      box-shadow: 0 1px 3px rgba(9, 29, 63, 0.08);
+    a { color: #1D4ED8; }
+    header.site-header {
+      background: var(--navy);
+      color: white;
+      padding: 28px 20px;
     }
+    header.site-header .inner { max-width: 1080px; margin: 0 auto; }
+    header.site-header h1 { font-size: 1.75rem; font-weight: 800; margin: 0 0 4px; }
+    header.site-header p { margin: 0; color: rgba(255,255,255,0.65); font-size: 0.875rem; }
+    header.site-header nav { margin-top: 16px; display: flex; gap: 20px; }
+    header.site-header nav a { color: rgba(255,255,255,0.85); font-size: 0.875rem; font-weight: 600; text-decoration: none; }
+    header.site-header nav a:hover { text-decoration: underline; }
+
+    main {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 32px 20px 56px;
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+    @media (max-width: 800px) {
+      main { grid-template-columns: 1fr; }
+    }
+
+    h2 { font-size: 1.1rem; font-weight: 700; margin: 0 0 12px; }
+    ul { list-style: none; margin: 0; padding: 0; }
+    section.card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 18px rgba(9,29,63,0.04);
+    }
+
     .product {
       display: flex;
       justify-content: space-between;
       gap: 16px;
-      padding: 16px 0;
-      border-bottom: 1px solid rgba(9, 29, 63, 0.08);
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border);
     }
     .product:last-child { border-bottom: none; }
     .product-name { font-weight: 700; margin: 0; }
-    .product-meta, .product-desc { font-size: 0.875rem; color: rgba(9, 29, 63, 0.6); margin: 2px 0 0; }
+    .product-meta, .product-desc { font-size: 0.875rem; color: var(--secondary); margin: 2px 0 0; }
     .product-price-col { text-align: right; flex-shrink: 0; }
-    .product-price { font-weight: 700; margin: 0; }
-    .product-avail { font-size: 0.875rem; margin: 2px 0 0; }
-    .in-stock { color: rgba(9, 29, 63, 0.6); }
+    .product-price { font-weight: 700; margin: 0; font-variant-numeric: tabular-nums; }
+    .product-avail { font-size: 0.8rem; margin: 3px 0 0; font-weight: 600; }
+    .in-stock { color: var(--secondary); }
     .out-of-stock { color: var(--orange); }
+
     .hours-row {
       display: flex;
       justify-content: space-between;
-      padding: 8px 0;
-      border-bottom: 1px solid rgba(9, 29, 63, 0.08);
-      font-size: 0.9rem;
+      padding: 6px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.875rem;
     }
     .hours-row:last-child { border-bottom: none; }
-    .policy { padding: 16px 0; border-bottom: 1px solid rgba(9, 29, 63, 0.08); }
+    .policy { padding: 12px 0; border-bottom: 1px solid var(--border); }
     .policy:last-child { border-bottom: none; }
-    .policy p { margin: 0; font-size: 0.9rem; color: rgba(9, 29, 63, 0.7); }
+    .policy h3 { font-size: 0.9rem; font-weight: 700; margin: 0 0 4px; text-transform: capitalize; }
+    .policy p { margin: 0; font-size: 0.875rem; color: var(--secondary); line-height: 1.5; }
+    .empty { color: var(--secondary); font-size: 0.875rem; }
+
     footer {
-      margin-top: 48px;
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 0 20px 40px;
       font-size: 0.8rem;
-      color: rgba(9, 29, 63, 0.5);
+      color: var(--secondary);
       text-align: center;
     }
-    footer a { color: var(--blue); }
   </style>
 </head>
 <body>
+  <header class="site-header">
+    <div class="inner">
+      <h1>${name}</h1>
+      <p>Published business information</p>
+      <nav>
+        <a href="#products">Products</a>
+        <a href="#hours">Hours</a>
+        <a href="#policies">Policies</a>
+      </nav>
+    </div>
+  </header>
+
   <main>
-    <h1>${name}</h1>
+    <div>
+      <section class="card" id="products">
+        <h2>Products</h2>
+        <ul>${productsHtml}</ul>
+      </section>
+    </div>
 
-    <h2>Products</h2>
-    <section><ul>${productsHtml}</ul></section>
+    <div>
+      <section class="card" id="hours">
+        <h2>Hours</h2>
+        <ul>${hoursHtml}</ul>
+      </section>
 
-    <h2>Hours</h2>
-    <section><ul>${hoursHtml}</ul></section>
-
-    <h2>Policies</h2>
-    <section>${policiesHtml}</section>
-
-    <footer>
-      Business information kept accurate by OneBridge &middot;
-      <a href="/site/${slug}/llms.txt">llms.txt</a> &middot;
-      <a href="/site/${slug}/mcp">MCP for AI</a>
-    </footer>
+      <section class="card" id="policies">
+        <h2>Policies</h2>
+        ${policiesHtml}
+      </section>
+    </div>
   </main>
+
+  <footer>
+    Published from business-approved information through OneBridge &middot;
+    <a href="/site/${slug}/llms.txt">llms.txt</a> &middot;
+    <a href="/site/${slug}/mcp">MCP for AI</a>
+  </footer>
 </body>
 </html>`
 }

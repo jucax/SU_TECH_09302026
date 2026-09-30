@@ -9,7 +9,7 @@ export function Placeholder({ title, slice }: { title: string; slice: string }) 
           <CardDescription>This route is wired up. The real screen lands in {slice}.</CardDescription>
         </CardHeader>
         <CardContent>
-          <a href="/" className="text-sm text-blue underline underline-offset-4">
+          <a href="/" className="text-sm text-action-blue underline underline-offset-4">
             Back to landing
           </a>
         </CardContent>

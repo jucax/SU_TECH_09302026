@@ -77,7 +77,7 @@ export function Login() {
           </form>
           <p className="mt-4 text-center text-sm text-navy/60">
             Need an account?{' '}
-            <a href="/register" className="text-blue underline underline-offset-4">
+            <a href="/register" className="text-action-blue underline underline-offset-4">
               Set up your business
             </a>
           </p>

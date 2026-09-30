@@ -62,7 +62,7 @@ export function Register() {
             <CardTitle>Check your email</CardTitle>
             <CardDescription>
               We sent a confirmation link to {email}. Confirm your account, then{' '}
-              <a href="/login" className="text-blue underline underline-offset-4">
+              <a href="/login" className="text-action-blue underline underline-offset-4">
                 log in
               </a>{' '}
               to set up {businessName || 'your business'}.
@@ -117,7 +117,7 @@ export function Register() {
           </form>
           <p className="mt-4 text-center text-sm text-navy/60">
             Already have an account?{' '}
-            <a href="/login" className="text-blue underline underline-offset-4">
+            <a href="/login" className="text-action-blue underline underline-offset-4">
               Log in
             </a>
           </p>

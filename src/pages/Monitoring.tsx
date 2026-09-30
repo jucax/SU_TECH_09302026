@@ -34,21 +34,30 @@ interface MonitorResult {
 }
 
 const STATUS_STYLES: Record<ClaimDiffEntry['status'], string> = {
-  match: 'text-blue',
-  mismatch: 'text-orange',
-  unverifiable: 'text-navy/40',
+  match: 'text-success',
+  mismatch: 'text-error',
+  unverifiable: 'text-secondary',
+}
+const STATUS_LABELS: Record<ClaimDiffEntry['status'], string> = {
+  match: 'Matches',
+  mismatch: 'Mismatch',
+  unverifiable: 'Not verifiable',
 }
 
 function DiffTable({ diff }: { diff: ClaimDiffResult }) {
   if (diff.entries.length === 0) {
-    return <p className="text-sm text-navy/50">No checkable claims were made.</p>
+    return <p className="text-sm text-secondary">No checkable claims were made.</p>
   }
+
+  const scored = diff.matches + diff.mismatches
+
   return (
     <div className="flex flex-col gap-2">
       <table className="w-full text-left text-sm">
         <thead>
-          <tr className="text-navy/50">
+          <tr className="text-secondary">
             <th className="pb-1 font-medium">Subject</th>
+            <th className="pb-1 font-medium">Field</th>
             <th className="pb-1 font-medium">Claimed</th>
             <th className="pb-1 font-medium">Actual</th>
             <th className="pb-1 font-medium">Status</th>
@@ -56,20 +65,29 @@ function DiffTable({ diff }: { diff: ClaimDiffResult }) {
         </thead>
         <tbody>
           {diff.entries.map((entry, i) => (
-            <tr key={i} className="border-t border-navy/10">
+            <tr key={i} className="border-t border-border">
               <td className="py-1.5 pr-2 text-navy">{entry.subject}</td>
-              <td className="py-1.5 pr-2 text-navy/70">{entry.claimedValue}</td>
-              <td className="py-1.5 pr-2 text-navy/70">{entry.actualValue ?? '—'}</td>
-              <td className={`py-1.5 font-semibold ${STATUS_STYLES[entry.status]}`}>{entry.status}</td>
+              <td className="py-1.5 pr-2 text-secondary">{entry.field}</td>
+              <td className="py-1.5 pr-2 text-secondary">{entry.claimedValue}</td>
+              <td className="py-1.5 pr-2 text-secondary">{entry.actualValue ?? 'Unknown'}</td>
+              <td className={`py-1.5 font-semibold ${STATUS_STYLES[entry.status]}`}>
+                {STATUS_LABELS[entry.status]}
+              </td>
             </tr>
           ))}
         </tbody>
       </table>
-      <p className="text-sm text-navy/60">
-        {diff.matches}/{diff.matches + diff.mismatches} verifiable claims correct
-        {diff.unverifiable > 0 && ` (${diff.unverifiable} unverifiable)`} — accuracy score{' '}
-        <span className="font-semibold text-navy">{(diff.accuracyScore * 100).toFixed(0)}%</span>
-      </p>
+      {scored > 0 ? (
+        <p className="text-sm text-secondary">
+          {diff.matches}/{scored} verifiable claims correct
+          {diff.unverifiable > 0 && ` (${diff.unverifiable} not verifiable)`} — accuracy score{' '}
+          <span className="font-semibold text-navy">{(diff.accuracyScore * 100).toFixed(0)}%</span>
+        </p>
+      ) : (
+        <p className="text-sm text-secondary">
+          No verifiable claims to score{diff.unverifiable > 0 && ` (${diff.unverifiable} not verifiable)`}.
+        </p>
+      )}
     </div>
   )
 }
@@ -137,7 +155,7 @@ export function Monitoring() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <a href="/" className="text-sm text-blue underline underline-offset-4">
+            <a href="/" className="text-sm text-action-blue underline underline-offset-4">
               Back to landing
             </a>
           </CardContent>
@@ -150,14 +168,18 @@ export function Monitoring() {
     <main className="min-h-screen bg-gray px-4 py-12">
       <div className="mx-auto flex max-w-5xl flex-col gap-6">
         <div>
-          <p className="text-sm font-semibold text-blue">AI visibility monitor</p>
+          <p className="text-sm font-semibold text-action-blue">Accuracy check</p>
           <h1 className="text-3xl font-extrabold text-navy">
             {record?.profile.name ?? 'Loading...'}
           </h1>
+          <p className="mt-1 text-sm text-secondary">
+            Same question, same model, same shared settings. One answer can use this business's
+            MCP tools; the other cannot.
+          </p>
         </div>
 
         <Card>
-          <CardContent className="pt-6 text-sm text-navy/70">
+          <CardContent className="pt-6 text-sm text-secondary">
             Both panels below ask <span className="font-semibold text-navy">claude-sonnet-5</span> the
             exact same question, with the exact same settings, in parallel API calls. The only
             difference is whether this business's MCP server is attached. The "with MCP" panel makes
@@ -177,14 +199,20 @@ export function Monitoring() {
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && runComparison()}
-                className="flex-1 rounded-full border border-navy/20 px-4 py-2 text-sm text-navy focus:outline-none focus:ring-2 focus:ring-blue"
+                className="flex-1 rounded-[10px] border border-border px-4 py-2 text-sm text-navy focus:outline-none focus:ring-2 focus:ring-action-blue"
                 disabled={running}
               />
-              <Button onClick={runComparison} disabled={running || !prompt.trim()}>
+              <Button variant="action" onClick={runComparison} disabled={running || !prompt.trim()}>
                 {running ? 'Running...' : 'Run comparison'}
               </Button>
             </div>
-            {runError && <p className="mt-2 text-sm text-orange">{runError}</p>}
+            {runError && <p className="mt-2 text-sm text-error">{runError}</p>}
+            {!result && !running && (
+              <p className="mt-3 text-sm text-secondary">
+                Running will show two answers, a field-by-field accuracy check against this
+                business's verified record, and (for the connected side) the actual tool calls made.
+              </p>
+            )}
           </CardContent>
         </Card>
 
@@ -196,37 +224,35 @@ export function Monitoring() {
                 <CardDescription>General knowledge only, no tools available.</CardDescription>
               </CardHeader>
               <CardContent className="flex flex-col gap-4">
-                <p className="rounded-lg bg-gray p-3 text-sm italic text-navy/80">
-                  "{result.withoutMcp.answer}"
-                </p>
+                <p className="rounded-lg bg-gray p-3 text-sm text-navy">{result.withoutMcp.answer}</p>
                 <DiffTable diff={result.withoutMcp.diff} />
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="border-action-blue/30">
               <CardHeader>
                 <CardTitle>With MCP</CardTitle>
                 <CardDescription>Connected to this business's live MCP server.</CardDescription>
               </CardHeader>
               <CardContent className="flex flex-col gap-4">
-                <p className="rounded-lg bg-gray p-3 text-sm italic text-navy/80">
-                  "{result.withMcp.answer}"
+                <p className="rounded-lg bg-subtle-blue p-3 text-sm text-navy">
+                  {result.withMcp.answer}
                 </p>
                 <DiffTable diff={result.withMcp.diff} />
                 {result.withMcp.toolEvidence.length > 0 && (
-                  <div>
-                    <p className="mb-1 text-sm font-semibold text-navy">Tool calls made</p>
-                    <ul className="flex flex-col gap-1 text-sm text-navy/60">
+                  <details className="text-sm">
+                    <summary className="cursor-pointer font-semibold text-navy">
+                      Tool calls made ({result.withMcp.toolEvidence.length})
+                    </summary>
+                    <ul className="mt-2 flex flex-col gap-1">
                       {result.withMcp.toolEvidence.map((call, i) => (
-                        <li key={i} className="rounded bg-gray p-2">
-                          <span className="font-mono text-navy">{call.tool}</span>
-                          {call.input != null && (
-                            <span className="text-navy/50"> {JSON.stringify(call.input)}</span>
-                          )}
+                        <li key={i} className="rounded bg-gray p-2 font-mono text-xs text-secondary">
+                          <span className="text-navy">{call.tool}</span>
+                          {call.input != null && ` ${JSON.stringify(call.input)}`}
                         </li>
                       ))}
                     </ul>
-                  </div>
+                  </details>
                 )}
               </CardContent>
             </Card>

@@ -137,7 +137,7 @@ export function Dashboard() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <a href="/" className="text-sm text-blue underline underline-offset-4">
+            <a href="/" className="text-sm text-action-blue underline underline-offset-4">
               Back to landing
             </a>
           </CardContent>
@@ -245,7 +245,7 @@ export function Dashboard() {
                     {slug && (
                       <a
                         href={`/dashboard/review?slug=${encodeURIComponent(slug)}`}
-                        className="text-blue underline underline-offset-4"
+                        className="text-action-blue underline underline-offset-4"
                       >
                         view
                       </a>

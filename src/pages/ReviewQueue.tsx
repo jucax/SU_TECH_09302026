@@ -77,7 +77,7 @@ export function ReviewQueue() {
             <CardDescription>Go back to the landing page and click "See it work" first.</CardDescription>
           </CardHeader>
           <CardContent>
-            <a href="/" className="text-sm text-blue underline underline-offset-4">
+            <a href="/" className="text-sm text-action-blue underline underline-offset-4">
               Back to landing
             </a>
           </CardContent>
@@ -93,15 +93,18 @@ export function ReviewQueue() {
     <main className="min-h-screen bg-gray px-4 py-12">
       <div className="mx-auto flex max-w-3xl flex-col gap-6">
         <div>
-          <p className="text-sm font-semibold text-blue">Governance</p>
-          <h1 className="text-3xl font-extrabold text-navy">Review queue</h1>
-          <p className="mt-1 text-sm text-navy/60">
-            Routine updates sync automatically. New products and price changes over 20% land here
-            first: the owner decides, and every decision is recorded below.
+          <p className="text-sm font-semibold text-action-blue">Governance</p>
+          <h1 className="text-3xl font-extrabold text-navy">
+            Review changes {pending.length > 0 && <span className="text-review">({pending.length})</span>}
+          </h1>
+          <p className="mt-1 text-sm text-secondary">
+            Some changes need your approval before publication. Routine updates sync automatically;
+            new products and price changes over 20% land here first, and every decision is recorded
+            below.
           </p>
         </div>
 
-        {error && <p className="text-sm text-orange">{error}</p>}
+        {error && <p className="text-sm text-error">{error}</p>}
 
         <Card>
           <CardHeader>
@@ -109,25 +112,31 @@ export function ReviewQueue() {
           </CardHeader>
           <CardContent>
             {pending.length === 0 ? (
-              <p className="text-sm text-navy/50">Nothing waiting on a decision.</p>
+              <p className="text-sm text-secondary">Nothing waiting for review.</p>
             ) : (
-              <ul className="flex flex-col divide-y divide-navy/10">
+              <ul className="flex flex-col gap-3">
                 {pending.map((item) => (
-                  <li key={item.id} className="flex flex-col gap-2 py-4">
+                  <li
+                    key={item.id}
+                    className="flex flex-col gap-3 rounded-lg border border-review/20 bg-review-surface p-4"
+                  >
                     <div>
                       <p className="font-semibold text-navy">{item.summary}</p>
-                      <p className="text-sm text-navy/50">
+                      <p className="text-sm text-review">
                         {RULE_LABELS[item.ruleTriggered] ?? item.ruleTriggered}
-                        {item.rawInstruction && ` — "${item.rawInstruction}"`}
                       </p>
+                      {item.rawInstruction && (
+                        <p className="mt-1 text-sm text-secondary">"{item.rawInstruction}"</p>
+                      )}
                     </div>
                     <div className="flex gap-2">
                       <Button
+                        variant="action"
                         size="sm"
                         onClick={() => decide(item.id, 'approve')}
                         disabled={decidingId === item.id}
                       >
-                        Approve
+                        Approve change
                       </Button>
                       <Button
                         size="sm"
@@ -152,17 +161,19 @@ export function ReviewQueue() {
           </CardHeader>
           <CardContent>
             {decided.length === 0 ? (
-              <p className="text-sm text-navy/50">No decisions yet.</p>
+              <p className="text-sm text-secondary">No decisions yet.</p>
             ) : (
-              <ul className="flex flex-col divide-y divide-navy/10">
+              <ul className="flex flex-col divide-y divide-border">
                 {decided.map((item) => (
                   <li key={item.id} className="py-3">
                     <p className="text-navy">{item.summary}</p>
-                    <p className="text-sm text-navy/50">
-                      <span className={item.status === 'approved' ? 'text-blue' : 'text-orange'}>
+                    <p className="text-sm text-secondary">
+                      <span
+                        className={`font-semibold ${item.status === 'approved' ? 'text-success' : 'text-error'}`}
+                      >
                         {item.status}
                       </span>{' '}
-                      by {item.decidedBy} &middot;{' '}
+                      by {item.decidedBy ?? 'Unknown'} &middot;{' '}
                       {item.decidedAt && new Date(item.decidedAt).toLocaleString()}
                     </p>
                   </li>
