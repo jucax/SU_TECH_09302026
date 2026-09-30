@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from 'react'
 import {
+  AlertTriangle,
   Bell,
   Building2,
   Check,
@@ -159,6 +160,100 @@ function Toggle({ label, helper, defaultOn }: { label: string; helper: string; d
   )
 }
 
+type SubscriptionStatus = 'active' | 'confirming-cancel' | 'canceled'
+
+// OneBridge has exactly one plan (src/pages/Landing.tsx's #pricing section):
+// a $250 one-time setup fee and a flat $149/month. There is no tier picker
+// here because there is nothing to pick between -- this card only ever shows
+// that one plan, plus the real cancel/reactivate state machine below it.
+function PlanCard({ sampleTag }: { sampleTag?: boolean }) {
+  const [status, setStatus] = useState<SubscriptionStatus>('active')
+
+  return (
+    <Card className="flex flex-col gap-4 p-6">
+      <div className="flex items-center justify-between gap-2">
+        <h2 className="flex items-center gap-2 text-base font-bold text-navy">
+          <span className="text-action-blue">
+            <CreditCard size={18} aria-hidden="true" />
+          </span>
+          Plan
+        </h2>
+        {sampleTag && <SampleBadge />}
+      </div>
+
+      {status === 'active' && (
+        <>
+          <div>
+            <p className="text-2xl font-extrabold text-navy">{sample.plan.price}</p>
+            <p className="text-sm font-semibold text-navy">{sample.plan.name}</p>
+            <p className="text-xs text-secondary">
+              Plus a {sample.plan.setupFee} one-time setup fee, already paid. No other plan or
+              tier: this is the only subscription OneBridge offers.
+            </p>
+          </div>
+          <p className="inline-flex w-fit items-center gap-1.5 text-xs font-semibold text-success">
+            <Check size={14} aria-hidden="true" /> Active
+          </p>
+          <button
+            type="button"
+            onClick={() => setStatus('confirming-cancel')}
+            className="inline-flex w-fit min-h-[40px] items-center gap-1.5 rounded-[10px] border border-border bg-white px-4 text-sm font-semibold text-error hover:bg-error-surface"
+          >
+            Cancel subscription
+          </button>
+          <p className="text-xs text-secondary">Demo: no billing is connected. Nothing is charged here.</p>
+        </>
+      )}
+
+      {status === 'confirming-cancel' && (
+        <>
+          <div className="flex flex-col gap-2 rounded-lg border border-error-surface bg-error-surface p-4">
+            <p className="flex items-center gap-1.5 text-sm font-semibold text-error">
+              <AlertTriangle size={16} aria-hidden="true" /> Cancel your subscription?
+            </p>
+            <p className="text-sm text-navy">
+              Your website, MCP server, and dashboard stop updating for customers and AI
+              assistants once this takes effect. You can reactivate any time.
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setStatus('canceled')}
+              className="min-h-[40px] rounded-[10px] bg-error px-4 text-sm font-semibold text-white hover:bg-error/90"
+            >
+              Yes, cancel subscription
+            </button>
+            <button
+              type="button"
+              onClick={() => setStatus('active')}
+              className="min-h-[40px] rounded-[10px] border border-border bg-white px-4 text-sm font-semibold text-navy hover:bg-gray"
+            >
+              Keep my subscription
+            </button>
+          </div>
+        </>
+      )}
+
+      {status === 'canceled' && (
+        <>
+          <div className="flex flex-col gap-2 rounded-lg border border-border bg-gray p-4">
+            <p className="flex items-center gap-1.5 text-sm font-semibold text-navy">
+              <Check size={16} aria-hidden="true" /> Subscription canceled
+            </p>
+            <p className="text-sm text-secondary">
+              {sample.plan.name} ({sample.plan.price}) is no longer active.
+            </p>
+          </div>
+          <Button onClick={() => setStatus('active')} className="w-fit">
+            Reactivate subscription
+          </Button>
+        </>
+      )}
+    </Card>
+  )
+}
+
 const hhmm = (t: string | null) => (t ? t.slice(0, 5) : '')
 const DAY_ORDER = [1, 2, 3, 4, 5, 6, 0]
 
@@ -171,8 +266,6 @@ export function DashboardSettings() {
   const [nameDraft, setNameDraft] = useState('')
   const [team, setTeam] = useState(sample.team)
   const [teamDraft, setTeamDraft] = useState(sample.team)
-  const [plan, setPlan] = useState(sample.plan)
-  const [planDraft, setPlanDraft] = useState('Pilot plan')
 
   // Real, saved through /api/apply-change.
   const [hoursDraft, setHoursDraft] = useState<HoursEntry[]>([])
@@ -531,41 +624,7 @@ export function DashboardSettings() {
                 />
               </Card>
 
-              <EditableCard
-                icon={<CreditCard size={18} aria-hidden="true" />}
-                title="Plan"
-                sampleTag
-                note="Demo: no billing is connected. Prices are illustrative."
-                onOpen={() => setPlanDraft(plan.name)}
-                onSave={async () => {
-                  const next = sample.plans.find((p) => p.name === planDraft)
-                  if (next) setPlan(next)
-                  return null
-                }}
-                view={
-                  <>
-                    <p className="text-2xl font-extrabold text-navy">{plan.price}</p>
-                    <p className="text-sm font-semibold text-navy">{plan.name}</p>
-                    <p className="text-xs text-secondary">{plan.note}. No billing is connected.</p>
-                  </>
-                }
-                edit={
-                  <label className="grid gap-1 text-sm">
-                    <span className="text-xs text-secondary">Choose a plan</span>
-                    <select
-                      className={fieldClass}
-                      value={planDraft}
-                      onChange={(e) => setPlanDraft(e.target.value)}
-                    >
-                      {sample.plans.map((p) => (
-                        <option key={p.name} value={p.name}>
-                          {p.name} ({p.price})
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                }
-              />
+              <PlanCard sampleTag />
             </>
           )}
         </div>

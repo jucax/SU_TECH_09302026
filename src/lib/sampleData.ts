@@ -77,9 +77,8 @@ export const sample = {
     { name: 'Jorge Ramirez', role: 'Owner', access: 'Approves material changes' },
     { name: 'Maria Lopez', role: 'Store manager', access: 'Routine updates' },
   ],
-  plan: { name: 'Pilot plan', price: '$149 / month', note: 'Illustrative price from the business plan' },
-  plans: [
-    { name: 'Pilot plan', price: '$149 / month', note: 'Illustrative price from the business plan' },
-    { name: 'Starter (example)', price: '$79 / month', note: 'Example tier for the demo only' },
-  ],
+  // Matches the landing page's pricing section exactly (src/pages/Landing.tsx,
+  // #pricing): one setup fee, one monthly fee, no other tier. Do not add a
+  // second option here -- there isn't one to add.
+  plan: { name: 'One Simple Subscription', setupFee: '$250', price: '$149 / month' },
 }
