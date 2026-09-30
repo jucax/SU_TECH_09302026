@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 
+import { DashboardLayout } from '@/components/dashboard/DashboardLayout'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import type { VerifiedRecord } from '@lib/schemas'
@@ -165,7 +166,7 @@ export function Monitoring() {
   }
 
   return (
-    <main className="min-h-screen bg-gray px-4 py-12">
+    <DashboardLayout slug={slug}>
       <div className="mx-auto flex max-w-5xl flex-col gap-6">
         <div>
           <p className="text-sm font-semibold text-action-blue">Accuracy check</p>
@@ -259,6 +260,6 @@ export function Monitoring() {
           </div>
         )}
       </div>
-    </main>
+    </DashboardLayout>
   )
 }

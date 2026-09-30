@@ -2,7 +2,9 @@ import { Route, Routes } from 'react-router-dom'
 
 import { Dashboard } from '@/pages/Dashboard'
 import { Demo } from '@/pages/Demo'
-import { DashboardSection } from '@/pages/DashboardSection'
+import { DashboardAnalytics } from '@/pages/DashboardAnalytics'
+import { DashboardProducts } from '@/pages/DashboardProducts'
+import { DashboardSettings } from '@/pages/DashboardSettings'
 import { Landing } from '@/pages/Landing'
 import { Login } from '@/pages/Login'
 import { Monitoring } from '@/pages/Monitoring'
@@ -22,33 +24,9 @@ function App() {
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/dashboard/monitoring" element={<Monitoring />} />
       <Route path="/dashboard/review" element={<ReviewQueue />} />
-      <Route
-        path="/dashboard/products"
-        element={
-          <DashboardSection
-            title="Products"
-            summary="Full catalog view and editing. For now, products are listed on the Dashboard tab."
-          />
-        }
-      />
-      <Route
-        path="/dashboard/mcp"
-        element={
-          <DashboardSection
-            title="MCP servers"
-            summary="Connection details, tool list, and request log for this business's MCP server."
-          />
-        }
-      />
-      <Route
-        path="/dashboard/settings"
-        element={
-          <DashboardSection
-            title="Settings"
-            summary="Business profile, hours, policies, and account options."
-          />
-        }
-      />
+      <Route path="/dashboard/products" element={<DashboardProducts />} />
+      <Route path="/dashboard/analytics" element={<DashboardAnalytics />} />
+      <Route path="/dashboard/settings" element={<DashboardSettings />} />
       <Route path="*" element={<Placeholder title="Not found" slice="-" />} />
     </Routes>
   )
