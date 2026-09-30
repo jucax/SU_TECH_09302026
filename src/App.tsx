@@ -2,6 +2,7 @@ import { Route, Routes } from 'react-router-dom'
 
 import { Dashboard } from '@/pages/Dashboard'
 import { Landing } from '@/pages/Landing'
+import { Monitoring } from '@/pages/Monitoring'
 import { Placeholder } from '@/pages/Placeholder'
 
 function App() {
@@ -12,10 +13,7 @@ function App() {
       <Route path="/register" element={<Placeholder title="Set up your business" slice="M11" />} />
       <Route path="/setup" element={<Placeholder title="Setup wizard" slice="M11" />} />
       <Route path="/dashboard" element={<Dashboard />} />
-      <Route
-        path="/dashboard/monitoring"
-        element={<Placeholder title="AI visibility monitoring" slice="M8" />}
-      />
+      <Route path="/dashboard/monitoring" element={<Monitoring />} />
       <Route
         path="/dashboard/review"
         element={<Placeholder title="Governance review queue" slice="M9" />}
