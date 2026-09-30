@@ -35,7 +35,7 @@
   position:relative;
   display:block;
   flex:0 0 auto;
-  width:224px;
+  width:157px;
   aspect-ratio:867 / 376;
   overflow:hidden}
 .ob-logo {
@@ -310,7 +310,7 @@ to {
 .ob-header {
   padding-block:10px}
 .ob-header-brand {
-  width:160px}
+  width:112px}
 .ob-nav-detail {
   display:none}
 .ob-nav {
@@ -396,7 +396,7 @@ to {
 .ob-nav>a:not(.ob-button){white-space:nowrap}
 .ob-landing .ob-final .ob-button-outline{border-color:#60728d}
 @media(max-width:760px){.ob-header{padding-inline:18px}.ob-nav{gap:14px}.ob-nav .ob-button{display:none}}
-@media(max-width:390px){.ob-header-brand{width:136px}.ob-header{gap:12px;padding-inline:12px}.ob-nav{font-size:12px}}
+@media(max-width:390px){.ob-header-brand{width:95px}.ob-header{gap:12px;padding-inline:12px}.ob-nav{font-size:12px}}
 
 /* Pricing */
 html{scroll-behavior:smooth}.ob-landing section[id]{scroll-margin-top:24px}
