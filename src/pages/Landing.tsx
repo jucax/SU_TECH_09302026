@@ -1,4 +1,3 @@
-import { BarChart3, Compass, Handshake, Link2 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 import './Landing.css'
@@ -50,33 +49,6 @@ const steps = [
   {
     title: 'We stay with you',
     body: 'Update your information, inspect flagged inconsistencies, and track activity from your OneBridge platform.',
-  },
-]
-
-const growthPhases = [
-  {
-    label: 'LAND',
-    title: 'Start with visibility',
-    body: 'The business plan proposes a free AI Visibility Check so owners can see how supported assistants currently represent their business.',
-    icon: Compass,
-  },
-  {
-    label: 'PROVE',
-    title: 'Show the evidence',
-    body: 'Compare AI answers with owner-approved facts. The prototype demonstrates a focused comparison with and without Jorge’s MCP connection.',
-    icon: BarChart3,
-  },
-  {
-    label: 'CONNECT',
-    title: 'Build the trusted foundation',
-    body: 'Review business information, then publish a website and MCP from the same approved record.',
-    icon: Link2,
-  },
-  {
-    label: 'EXPAND',
-    title: 'Grow through trusted partners',
-    body: 'The pilot plan explores reaching more local businesses through chambers, small business centers, universities, and trade groups.',
-    icon: Handshake,
   },
 ]
 
@@ -156,27 +128,6 @@ export function Landing() {
               <p>Maria needs the right part, at the right price. Current compatibility and availability information helps her avoid wasted time, money, and misleading answers.</p>
             </article>
           </div>
-        </section>
-
-        <section className="ob-growth ob-container" aria-labelledby="growth-title">
-          <div className="ob-growth-heading">
-            <div>
-              <p className="ob-eyebrow">OUR GO-TO-MARKET: LAND → PROVE → CONNECT → EXPAND</p>
-              <h2 id="growth-title">Start with what AI says.<br />Build a connection people can trust.</h2>
-            </div>
-            <p className="ob-body">OneBridge begins by making the information gap visible, then helps a business improve and maintain the facts available to customers and compatible AI systems.</p>
-          </div>
-          <div className="ob-growth-grid">
-            {growthPhases.map(({ label, title, body, icon: Icon }, index) => (
-              <article className="ob-growth-card" key={label}>
-                <div className="ob-growth-top"><span className="ob-growth-icon"><Icon size={21} strokeWidth={1.8} /></span><span className="ob-growth-number">0{index + 1}</span></div>
-                <p className="ob-growth-label">{label}</p>
-                <h3>{title}</h3>
-                <p className="ob-growth-copy">{body}</p>
-              </article>
-            ))}
-          </div>
-          <p className="ob-growth-note"><span>PROTOTYPE SCOPE</span> The free, multi-assistant AI Visibility Check and partner expansion are planned. The current prototype demonstrates the Jorge walkthrough and a focused connected AI accuracy comparison. The business plan’s pilot targets and measures are goals, not achieved results.</p>
         </section>
 
         <section id="how-it-works" className="ob-how ob-container" aria-labelledby="how-title">
