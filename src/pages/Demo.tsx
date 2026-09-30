@@ -47,6 +47,10 @@ function compactTime(time: string | null): string {
   return `${hour}${m ? `:${String(m).padStart(2, '0')}` : ''} ${h >= 12 ? 'PM' : 'AM'}`
 }
 
+// Step 3 "Before": an earlier OneBridge-generated site for Jorge, kept as a live
+// reference now that the generator produces a newer storefront design.
+const PREVIOUS_SITE_URL = 'https://onebridge-botb-2026.vercel.app/site/jorge-s-auto-parts-demo-dee58a'
+
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
 // Mirrors public/demo/jorges-hours-and-policies.pdf. Extracting this from the
@@ -935,16 +939,16 @@ export function Demo() {
                 <Card>
                   <CardHeader>
                     <CardTitle>Before</CardTitle>
-                    <CardDescription>Jorge's old website: stale prices, no structure.</CardDescription>
+                    <CardDescription>The first website OneBridge generated for Jorge.</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <iframe
-                      src="/demo/jorges-old-site.html"
-                      title="Jorge's old website"
+                      src={PREVIOUS_SITE_URL}
+                      title="Previous generated website"
                       className="h-64 w-full rounded-lg border border-border"
                     />
                     <a
-                      href="/demo/jorges-old-site.html"
+                      href={PREVIOUS_SITE_URL}
                       target="_blank"
                       rel="noreferrer"
                       className="mt-2 inline-block text-sm font-semibold text-action-blue underline underline-offset-4"
