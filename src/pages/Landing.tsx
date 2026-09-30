@@ -1,35 +1,30 @@
+import { Eye, ShieldCheck, Store, Users } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 import './Landing.css'
 
-const JORGE_SLUG = 'jorges-auto-parts'
 const ASSET = '/landing/'
 
-const judgeLinks = [
+const coreValues = [
   {
-    label: "Jorge's website",
-    description: 'The front door for people, generated from Jorge’s business-approved record.',
-    href: `/site/${JORGE_SLUG}`,
+    title: 'Truth Before Visibility',
+    body: 'We never sacrifice accuracy for visibility. Prices, availability, policies, and product information should be verified before they are communicated to customers or AI systems.',
+    icon: ShieldCheck,
   },
   {
-    label: 'llms.txt',
-    description: 'Published business facts and a pointer to the MCP endpoint.',
-    href: `/site/${JORGE_SLUG}/llms.txt`,
+    title: 'Access Without Advantage',
+    body: 'Local businesses should not need an AI team, expensive consultants, or technical expertise to participate in AI commerce. OneBridge makes the new digital marketplace accessible to everyone.',
+    icon: Store,
   },
   {
-    label: 'MCP endpoint',
-    description: 'Connect it from a compatible assistant or MCP Inspector.',
-    href: `/site/${JORGE_SLUG}/mcp`,
+    title: 'Humans Stay Accountable',
+    body: 'AI can monitor, flag, synchronize, and recommend, but people remain responsible for uncertain information and consequential decisions.',
+    icon: Users,
   },
   {
-    label: 'Connected AI accuracy check',
-    description: 'Compare answers with and without Jorge’s MCP connection.',
-    href: `/dashboard/monitoring?slug=${JORGE_SLUG}`,
-  },
-  {
-    label: 'Source on GitHub',
-    description: 'Review the code, setup instructions, and prototype status.',
-    href: 'https://github.com/jucax/SU_TECH_09302026',
+    title: 'Trust Through Transparency',
+    body: 'Businesses should know what information OneBridge communicates, where it came from, when it changed, and when human review is required. We do not hide uncertainty.',
+    icon: Eye,
   },
 ]
 
@@ -157,18 +152,19 @@ export function Landing() {
           <Actions />
         </section>
 
-        <section className="ob-judge-resources-section ob-container" aria-labelledby="resources-title">
-          <div className="ob-judge-resources-heading">
-            <p className="ob-eyebrow">EXPLORE THE WORKING PROTOTYPE</p>
-            <h2 id="resources-title">See what OneBridge publishes.</h2>
-            <p className="ob-body">Open the generated website, structured information, and accuracy check directly.</p>
+        <section className="ob-values-section ob-container" aria-labelledby="values-title">
+          <div className="ob-values-heading">
+            <p className="ob-eyebrow">WHAT GUIDES US</p>
+            <h2 id="values-title">Core values, built into every connection.</h2>
+            <p className="ob-body">The way we connect business information to AI matters as much as the technology itself.</p>
           </div>
-          <div className="ob-judge-resource-grid">
-            {judgeLinks.map((link) => (
-              <a className="ob-resource" key={link.href} href={link.href}>
-                <span className="ob-resource-icon" aria-hidden="true">↗</span>
-                <span><strong>{link.label}</strong><small>{link.description}</small></span>
-              </a>
+          <div className="ob-values-grid">
+            {coreValues.map(({ title, body, icon: Icon }, index) => (
+              <article className="ob-value-card" key={title}>
+                <div className="ob-value-top"><span className="ob-value-icon"><Icon size={22} strokeWidth={1.8} /></span><span className="ob-value-number">0{index + 1}</span></div>
+                <h3>{title}</h3>
+                <p>{body}</p>
+              </article>
             ))}
           </div>
         </section>
