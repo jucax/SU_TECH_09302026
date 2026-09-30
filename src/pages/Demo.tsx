@@ -381,7 +381,15 @@ export function Demo() {
             const stage = scene === 'intro' || scene === 'sources' ? 0 : scene === 'cleaning' ? 1 : scene === 'setup' ? 2 : scene === 'bridging' ? 2 : 3
             const complete = index < stage
             const active = index === stage
-            return <div key={label} className={complete ? 'is-complete' : active ? 'is-active' : ''} aria-current={active ? 'step' : undefined}><span>{complete ? <Check size={14} /> : `0${index + 1}`}</span><small>{label}</small></div>
+            return (
+              <div key={label} className={complete ? 'is-complete' : active ? 'is-active' : ''} aria-current={active ? 'step' : undefined}>
+                <div className="ob-demo-stage-label">
+                  <span>{complete ? <Check size={14} /> : `0${index + 1}`}</span>
+                  <small>{label}</small>
+                </div>
+                {index < 3 && <span className="ob-demo-connector" aria-hidden="true" />}
+              </div>
+            )
           })}
         </nav>
         <div className="ob-demo-scenes">
