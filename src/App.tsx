@@ -1,5 +1,6 @@
 import { Route, Routes } from 'react-router-dom'
 
+import { Dashboard } from '@/pages/Dashboard'
 import { Landing } from '@/pages/Landing'
 import { Placeholder } from '@/pages/Placeholder'
 
@@ -10,7 +11,7 @@ function App() {
       <Route path="/login" element={<Placeholder title="Log in" slice="M11" />} />
       <Route path="/register" element={<Placeholder title="Set up your business" slice="M11" />} />
       <Route path="/setup" element={<Placeholder title="Setup wizard" slice="M11" />} />
-      <Route path="/dashboard" element={<Placeholder title="Dashboard" slice="M4" />} />
+      <Route path="/dashboard" element={<Dashboard />} />
       <Route
         path="/dashboard/monitoring"
         element={<Placeholder title="AI visibility monitoring" slice="M8" />}

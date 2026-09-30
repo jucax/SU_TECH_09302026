@@ -1,3 +1,6 @@
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
@@ -32,6 +35,24 @@ const judgeLinks = [
 ]
 
 export function Landing() {
+  const navigate = useNavigate()
+  const [starting, setStarting] = useState(false)
+  const [startError, setStartError] = useState<string | null>(null)
+
+  async function handleSeeItWork() {
+    setStarting(true)
+    setStartError(null)
+    try {
+      const res = await fetch('/api/demo-start', { method: 'POST' })
+      if (!res.ok) throw new Error((await res.json()).error ?? 'Failed to start demo')
+      const { slug } = (await res.json()) as { slug: string }
+      navigate(`/dashboard?slug=${encodeURIComponent(slug)}`)
+    } catch (err) {
+      setStartError(err instanceof Error ? err.message : 'Something went wrong')
+      setStarting(false)
+    }
+  }
+
   return (
     <main className="min-h-screen bg-gray px-4 py-16">
       <div className="mx-auto flex max-w-3xl flex-col items-center gap-8 text-center">
@@ -53,13 +74,16 @@ export function Landing() {
           from the same verified record.
         </p>
 
-        <div className="flex flex-wrap justify-center gap-3">
-          <Button asChild variant="primary" size="lg">
-            <a href="/dashboard">See it work: Jorge's Auto Parts</a>
-          </Button>
-          <Button asChild variant="secondary" size="lg">
-            <a href="/register">Set up your business</a>
-          </Button>
+        <div className="flex flex-col items-center gap-2">
+          <div className="flex flex-wrap justify-center gap-3">
+            <Button variant="primary" size="lg" onClick={handleSeeItWork} disabled={starting}>
+              {starting ? 'Setting up your sandbox...' : "See it work: Jorge's Auto Parts"}
+            </Button>
+            <Button asChild variant="secondary" size="lg">
+              <a href="/register">Set up your business</a>
+            </Button>
+          </div>
+          {startError && <p className="text-sm text-orange">{startError}</p>}
         </div>
 
         <Card className="w-full text-left">
