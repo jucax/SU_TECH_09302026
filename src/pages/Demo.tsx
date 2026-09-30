@@ -1,3 +1,4 @@
+import { FileText, Server, ShieldCheck } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
@@ -40,13 +41,44 @@ const DEMO_POLICIES = [
   },
 ]
 
-type Scene = 'intro' | 'sources' | 'setup' | 'bridging' | 'reveal'
+// Jorge supplied an existing website, so a real cleaning pass would also look
+// for brand color/logo material there. He doesn't have a usable logo, which
+// this list says plainly rather than silently skipping it -- a real owner in
+// this position would be asked to upload one.
+const CLEANING_STEPS = [
+  'Cleaning the data',
+  'Finding relationships between items',
+  'Finding products',
+  'Finding business hours and policies',
+  'Finding a matching color palette from your website',
+  "Looking for a logo — none found, we'll ask you to upload one",
+]
 
-function JudgeNote({ children }: { children: React.ReactNode }) {
+const BRIDGE_STEPS = [
+  'Structuring product, hours, and policy data',
+  'Generating an improved website',
+  'Generating an MCP server for AI assistants',
+  'Publishing llms.txt and robots.txt',
+]
+
+type Scene = 'intro' | 'sources' | 'cleaning' | 'setup' | 'bridging' | 'reveal'
+
+function Note({ children }: { children: React.ReactNode }) {
   return (
     <div className="rounded-lg border border-action-blue/20 bg-subtle-blue px-4 py-3 text-sm text-navy">
-      <span className="font-semibold text-action-blue">For judges: </span>
       {children}
+    </div>
+  )
+}
+
+function StepList({ steps, current }: { steps: string[]; current: number }) {
+  return (
+    <div className="flex flex-col gap-3">
+      {steps.map((label, i) => (
+        <p key={label} className={`text-sm ${i <= current ? 'font-semibold text-navy' : 'text-secondary'}`}>
+          {i < current ? '✓' : i === current ? '…' : '·'} {label}
+        </p>
+      ))}
     </div>
   )
 }
@@ -56,6 +88,7 @@ export function Demo() {
   const [scene, setScene] = useState<Scene>('intro')
   const [products, setProducts] = useState<Array<Omit<Product, 'id'>>>([])
   const [csvError, setCsvError] = useState<string | null>(null)
+  const [cleaningStep, setCleaningStep] = useState(0)
   const [bridgeStep, setBridgeStep] = useState(0)
   const [bridgeError, setBridgeError] = useState<string | null>(null)
   const [slug, setSlug] = useState<string | null>(null)
@@ -73,12 +106,15 @@ export function Demo() {
       .catch(() => setCsvError('Could not load the sample inventory file.'))
   }, [])
 
-  const bridgeSteps = [
-    'Reading the inventory spreadsheet and documents...',
-    'Structuring product, hours, and policy data...',
-    'Generating an improved website...',
-    'Generating an MCP server for AI assistants...',
-  ]
+  async function handleContinueToSetup() {
+    setScene('cleaning')
+    setCleaningStep(0)
+    for (let i = 0; i < CLEANING_STEPS.length; i++) {
+      setCleaningStep(i)
+      await new Promise((r) => setTimeout(r, 700))
+    }
+    setScene('setup')
+  }
 
   async function handleBridge() {
     setScene('bridging')
@@ -86,9 +122,9 @@ export function Demo() {
     setBridgeStep(0)
 
     const pacing = (async () => {
-      for (let i = 0; i < bridgeSteps.length; i++) {
+      for (let i = 0; i < BRIDGE_STEPS.length; i++) {
         setBridgeStep(i)
-        await new Promise((r) => setTimeout(r, 900))
+        await new Promise((r) => setTimeout(r, 800))
       }
     })()
 
@@ -158,10 +194,10 @@ export function Demo() {
               <p className="text-sm font-semibold text-action-blue">Step 1</p>
               <h1 className="text-2xl font-extrabold text-navy">What Jorge already has</h1>
             </div>
-            <JudgeNote>
-              These are real, downloadable files, not screenshots. A business owner hands over
-              whatever they already have; OneBridge doesn't require any particular format.
-            </JudgeNote>
+            <Note>
+              You can download or open each file below. These are the real, unedited files Jorge
+              sent over — OneBridge doesn't require any particular format to get started.
+            </Note>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               <Card>
                 <CardHeader>
@@ -212,9 +248,26 @@ export function Demo() {
               </Card>
             </div>
             <div>
-              <Button onClick={() => setScene('setup')}>Continue to setup</Button>
+              <Button onClick={handleContinueToSetup}>Continue to setup</Button>
             </div>
           </>
+        )}
+
+        {scene === 'cleaning' && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Reading Jorge's files</CardTitle>
+              <CardDescription>Turning a spreadsheet, a PDF, and a website into one record.</CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-4">
+              <StepList steps={CLEANING_STEPS} current={cleaningStep} />
+              <p className="text-xs text-secondary">
+                This walkthrough narrates the intended AI-assisted cleaning step. Today, this demo
+                parses the sample files deterministically; AI-backed structuring is implemented
+                separately (see the plain-language edit box on the dashboard).
+              </p>
+            </CardContent>
+          </Card>
         )}
 
         {scene === 'setup' && (
@@ -223,14 +276,11 @@ export function Demo() {
               <p className="text-sm font-semibold text-action-blue">Step 2</p>
               <h1 className="text-2xl font-extrabold text-navy">Set up {BUSINESS_NAME}</h1>
             </div>
-            <JudgeNote>
-              This is the same setup screen a real business uses to register (
-              <a href="/register" className="underline underline-offset-4">
-                try it yourself
-              </a>
-              ), pre-filled here from Jorge's files so you can see the result immediately.
-              Everything below is editable, and nothing publishes until "Bridge" is clicked.
-            </JudgeNote>
+            <Note>
+              This is the same setup screen used when a business registers, already filled in from
+              what we just read. Everything below is editable, and nothing goes live until you
+              click Bridge.
+            </Note>
 
             {csvError && <p className="text-sm text-error">{csvError}</p>}
             {bridgeError && <p className="text-sm text-error">{bridgeError}</p>}
@@ -314,20 +364,12 @@ export function Demo() {
             <CardHeader>
               <CardTitle>Building {BUSINESS_NAME}'s two front doors</CardTitle>
             </CardHeader>
-            <CardContent className="flex flex-col gap-3">
-              {bridgeSteps.map((label, i) => (
-                <p
-                  key={label}
-                  className={`text-sm ${i <= bridgeStep ? 'font-semibold text-navy' : 'text-secondary'}`}
-                >
-                  {i < bridgeStep ? '✓' : i === bridgeStep ? '…' : '·'} {label}
-                </p>
-              ))}
-              <p className="mt-2 text-xs text-secondary">
-                This walkthrough narrates the intended AI-assisted structuring step. Today this
-                demo uses deterministic parsing of the sample files; ANTHROPIC_API_KEY-backed
-                structuring is implemented separately (see the plain-language edit box and
-                accuracy check on the dashboard).
+            <CardContent className="flex flex-col gap-4">
+              <StepList steps={BRIDGE_STEPS} current={bridgeStep} />
+              <p className="text-xs text-secondary">
+                Today this step uses deterministic parsing of the sample files, not a live AI call
+                (that path exists separately -- see the dashboard's plain-language edit box and
+                accuracy check).
               </p>
             </CardContent>
           </Card>
@@ -391,31 +433,38 @@ export function Demo() {
                 <CardTitle>After: connection for AI</CardTitle>
                 <CardDescription>The same record, structured for AI assistants.</CardDescription>
               </CardHeader>
-              <CardContent className="flex flex-wrap gap-4 text-sm">
-                <a
-                  href={`/site/${slug}/llms.txt`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="font-semibold text-action-blue underline underline-offset-4"
-                >
-                  llms.txt
-                </a>
-                <a
-                  href={`/site/${slug}/robots.txt`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="font-semibold text-action-blue underline underline-offset-4"
-                >
-                  robots.txt
-                </a>
-                <a
-                  href={`/site/${slug}/mcp`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="font-semibold text-action-blue underline underline-offset-4"
-                >
-                  MCP endpoint
-                </a>
+              <CardContent>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                  <a
+                    href={`/site/${slug}/llms.txt`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex flex-col items-center gap-2 rounded-lg border border-border bg-gray p-4 text-center hover:border-action-blue/40"
+                  >
+                    <FileText className="h-6 w-6 text-action-blue" aria-hidden="true" />
+                    <span className="text-sm font-semibold text-navy">llms.txt</span>
+                    <span className="text-xs text-secondary">States the facts, in plain text</span>
+                  </a>
+                  <a
+                    href={`/site/${slug}/robots.txt`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex flex-col items-center gap-2 rounded-lg border border-border bg-gray p-4 text-center hover:border-action-blue/40"
+                  >
+                    <ShieldCheck className="h-6 w-6 text-action-blue" aria-hidden="true" />
+                    <span className="text-sm font-semibold text-navy">robots.txt</span>
+                    <span className="text-xs text-secondary">Welcomes AI crawlers by name</span>
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => navigate(`/dashboard?slug=${encodeURIComponent(slug)}#mcp`)}
+                    className="flex flex-col items-center gap-2 rounded-lg border border-action-blue bg-subtle-blue p-4 text-center hover:bg-subtle-blue/70"
+                  >
+                    <Server className="h-6 w-6 text-action-blue" aria-hidden="true" />
+                    <span className="text-sm font-semibold text-navy">MCP server</span>
+                    <span className="text-xs text-secondary">A live connection, not a document</span>
+                  </button>
+                </div>
               </CardContent>
             </Card>
 
