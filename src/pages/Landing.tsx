@@ -64,9 +64,6 @@ function Actions() {
       <Link className="ob-button ob-button-primary" to="/demo">
         See the live demo <span aria-hidden="true">→</span>
       </Link>
-      <Link className="ob-button ob-button-outline" to="/register">
-        Try it yourself <span aria-hidden="true">↗</span>
-      </Link>
     </div>
   )
 }
@@ -84,8 +81,7 @@ export function Landing() {
           <a className="ob-nav-detail" href="#how-it-works">How It Works</a>
           <a className="ob-nav-detail" href="#pricing">Pricing</a>
           <a className="ob-nav-detail" href="#core-values">Core Values</a>
-          <Link to="/login">Log in</Link>
-          <Link className="ob-button ob-button-small ob-button-outline" to="/register">Set Up Your Business</Link>
+          <Link className="ob-button ob-button-small ob-button-outline" to="/demo">See the live demo</Link>
         </nav>
       </header>
 
@@ -174,7 +170,7 @@ export function Landing() {
               <ul>
                 {planFeatures.map((feature) => <li key={feature}>{feature}</li>)}
               </ul>
-              <Link className="ob-button ob-button-primary" to="/register">Set Up Your Business <span aria-hidden="true">→</span></Link>
+              <Link className="ob-button ob-button-primary" to="/demo">See the live demo <span aria-hidden="true">→</span></Link>
             </div>
           </article>
         </section>
@@ -199,7 +195,7 @@ export function Landing() {
         </section>
 
         <section className="ob-final ob-container">
-          <div><p className="ob-eyebrow">YOUR BUSINESS. YOUR INFORMATION.</p><h2>Make your next connection.</h2><p>See the idea in action, or start with what your business already knows.</p></div>
+          <div><p className="ob-eyebrow">YOUR BUSINESS. YOUR INFORMATION.</p><h2>Make your next connection.</h2><p>See the idea in action with Jorge's guided walkthrough.</p></div>
           <Actions />
         </section>
       </main>
