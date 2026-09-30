@@ -931,31 +931,61 @@ export function Demo() {
             </div>
 
             <div className="flex flex-col gap-4 md:flex-row md:items-stretch">
-              <Card className="md:flex-1 md:self-start">
-                <CardHeader>
-                  <CardTitle>Before</CardTitle>
-                  <CardDescription>Jorge's old website: stale prices, no structure.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <iframe
-                    src="/demo/jorges-old-site.html"
-                    title="Jorge's old website"
-                    className="h-64 w-full rounded-lg border border-border"
-                  />
-                  <a
-                    href="/demo/jorges-old-site.html"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="mt-2 inline-block text-sm font-semibold text-action-blue underline underline-offset-4"
-                  >
-                    Open in a new tab
-                  </a>
-                </CardContent>
-              </Card>
+              <div className="flex flex-col gap-3 md:flex-1">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Before</CardTitle>
+                    <CardDescription>Jorge's old website: stale prices, no structure.</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <iframe
+                      src="/demo/jorges-old-site.html"
+                      title="Jorge's old website"
+                      className="h-64 w-full rounded-lg border border-border"
+                    />
+                    <a
+                      href="/demo/jorges-old-site.html"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mt-2 inline-block text-sm font-semibold text-action-blue underline underline-offset-4"
+                    >
+                      Open in a new tab
+                    </a>
+                  </CardContent>
+                </Card>
+                <div className="flex justify-center" aria-hidden="true">
+                  <ArrowDown className="h-6 w-6 text-action-blue" />
+                </div>
+                <Card className="border-action-blue/30 bg-subtle-blue">
+                  <CardHeader>
+                    <div className="flex items-center justify-between gap-2">
+                      <CardTitle>After: MCP server for AI</CardTitle>
+                      <InfoTip label="MCP server">
+                        A live connection AI assistants can plug into to ask this business
+                        questions directly and get the current answer, instead of just reading a
+                        static page that might be stale.
+                      </InfoTip>
+                    </div>
+                    <CardDescription>The same record, served as a live connection.</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <button
+                      type="button"
+                      onClick={() => navigate(`/dashboard?slug=${encodeURIComponent(slug)}`)}
+                      className="flex w-full items-center gap-3 rounded-lg border border-action-blue bg-white p-4 text-left hover:bg-subtle-blue/70"
+                    >
+                      <Server className="h-6 w-6 shrink-0 text-action-blue" aria-hidden="true" />
+                      <span>
+                        <span className="block text-sm font-semibold text-navy">MCP server</span>
+                        <span className="block text-xs text-secondary">A live connection, not a document. Open it in the dashboard.</span>
+                      </span>
+                    </button>
+                  </CardContent>
+                </Card>
+              </div>
 
-              <div className="flex items-center justify-center md:w-12 md:flex-none md:flex-col md:justify-around">
+              <div className="flex items-center justify-center md:w-12 md:flex-none md:items-start md:pt-40">
                 <ArrowDown className="h-6 w-6 text-action-blue md:hidden" aria-hidden="true" />
-                <ArrowRight className="hidden h-6 w-6 text-action-blue md:block" aria-hidden="true" />
                 <ArrowRight className="hidden h-6 w-6 text-action-blue md:block" aria-hidden="true" />
               </div>
 
@@ -1022,33 +1052,6 @@ export function Demo() {
                         </a>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="border-action-blue/30 bg-subtle-blue">
-                  <CardHeader>
-                    <div className="flex items-center justify-between gap-2">
-                      <CardTitle>After: MCP server for AI</CardTitle>
-                      <InfoTip label="MCP server">
-                        A live connection AI assistants can plug into to ask this business
-                        questions directly and get the current answer, instead of just reading a
-                        static page that might be stale.
-                      </InfoTip>
-                    </div>
-                    <CardDescription>The same record, served as a live connection.</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <button
-                      type="button"
-                      onClick={() => navigate(`/dashboard?slug=${encodeURIComponent(slug)}`)}
-                      className="flex w-full items-center gap-3 rounded-lg border border-action-blue bg-white p-4 text-left hover:bg-subtle-blue/70"
-                    >
-                      <Server className="h-6 w-6 shrink-0 text-action-blue" aria-hidden="true" />
-                      <span>
-                        <span className="block text-sm font-semibold text-navy">MCP server</span>
-                        <span className="block text-xs text-secondary">A live connection, not a document — open in the dashboard</span>
-                      </span>
-                    </button>
                   </CardContent>
                 </Card>
               </div>
