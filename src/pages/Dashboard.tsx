@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 
+import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { formatDayOfWeek, formatHoursEntry, formatPriceCents } from '@lib/format'
-import type { VerifiedRecord } from '@lib/schemas'
+import type { ChangeSet, VerifiedRecord } from '@lib/schemas'
 
 const LAST_TENANT_KEY = 'onebridge:lastTenantSlug'
 
@@ -13,6 +14,11 @@ export function Dashboard() {
   const [record, setRecord] = useState<VerifiedRecord | null>(null)
   const [error, setError] = useState<string | null>(null)
 
+  const [instruction, setInstruction] = useState('')
+  const [applying, setApplying] = useState(false)
+  const [editError, setEditError] = useState<string | null>(null)
+  const [lastApplied, setLastApplied] = useState<string | null>(null)
+
   useEffect(() => {
     const fromQuery = searchParams.get('slug')
     const resolved = fromQuery ?? sessionStorage.getItem(LAST_TENANT_KEY)
@@ -20,19 +26,56 @@ export function Dashboard() {
     setSlug(resolved)
   }, [searchParams])
 
-  useEffect(() => {
-    if (!slug) return
-    setError(null)
-    setRecord(null)
-
-    fetch(`/api/tenant-record?slug=${encodeURIComponent(slug)}`)
+  const loadRecord = useCallback((forSlug: string) => {
+    return fetch(`/api/tenant-record?slug=${encodeURIComponent(forSlug)}`)
       .then(async (res) => {
         if (!res.ok) throw new Error((await res.json()).error ?? 'Failed to load')
         return res.json() as Promise<VerifiedRecord>
       })
       .then(setRecord)
-      .catch((err) => setError(err.message))
-  }, [slug])
+  }, [])
+
+  useEffect(() => {
+    if (!slug) return
+    setError(null)
+    setRecord(null)
+    loadRecord(slug).catch((err) => setError(err.message))
+  }, [slug, loadRecord])
+
+  async function handleApplyInstruction() {
+    if (!slug || !instruction.trim()) return
+    setApplying(true)
+    setEditError(null)
+    setLastApplied(null)
+
+    try {
+      const structureRes = await fetch('/api/structure', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slug, instruction }),
+      })
+      const structureBody = await structureRes.json()
+      if (!structureRes.ok) throw new Error(structureBody.error ?? 'Could not understand that')
+
+      const { changeSet, summary } = structureBody as { changeSet: ChangeSet; summary: string }
+
+      const applyRes = await fetch('/api/apply-change', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slug, changeSet, summary, instruction }),
+      })
+      const applyBody = await applyRes.json()
+      if (!applyRes.ok) throw new Error(applyBody.error ?? 'Could not apply that change')
+
+      await loadRecord(slug)
+      setLastApplied(summary)
+      setInstruction('')
+    } catch (err) {
+      setEditError(err instanceof Error ? err.message : 'Something went wrong')
+    } finally {
+      setApplying(false)
+    }
+  }
 
   if (!slug) {
     return (
@@ -80,10 +123,37 @@ export function Dashboard() {
     <main className="min-h-screen bg-gray px-4 py-12">
       <div className="mx-auto flex max-w-3xl flex-col gap-6">
         <div>
-          <p className="text-sm font-semibold text-blue">Verified record (read-only)</p>
+          <p className="text-sm font-semibold text-blue">Verified record</p>
           <h1 className="text-3xl font-extrabold text-navy">{record.profile.name}</h1>
           <p className="text-sm text-navy/50">/{record.profile.slug}</p>
         </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Update with plain language</CardTitle>
+            <CardDescription>
+              For example: "change the front brake rotor to $54.99 and mark it low stock."
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <input
+                type="text"
+                value={instruction}
+                onChange={(e) => setInstruction(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleApplyInstruction()}
+                placeholder="Change the front brake rotor to $54.99 and mark it low stock"
+                className="flex-1 rounded-full border border-navy/20 px-4 py-2 text-sm text-navy placeholder:text-navy/40 focus:outline-none focus:ring-2 focus:ring-blue"
+                disabled={applying}
+              />
+              <Button onClick={handleApplyInstruction} disabled={applying || !instruction.trim()}>
+                {applying ? 'Applying...' : 'Apply'}
+              </Button>
+            </div>
+            {editError && <p className="mt-2 text-sm text-orange">{editError}</p>}
+            {lastApplied && <p className="mt-2 text-sm text-blue">Applied: {lastApplied}</p>}
+          </CardContent>
+        </Card>
 
         <Card>
           <CardHeader>

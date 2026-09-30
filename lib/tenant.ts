@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto'
 
-import type { HoursEntry, Policy, Product, VerifiedRecord } from './schemas.js'
+import type { ChangeSet, HoursEntry, Policy, Product, VerifiedRecord } from './schemas.js'
 import { getServiceClient } from './db.js'
 
 export interface TenantRow {
@@ -103,6 +103,93 @@ export async function getVerifiedRecord(tenant: TenantRow): Promise<VerifiedReco
     hours,
     policies,
   }
+}
+
+// Writes a resolved change set to products/hours/policies and logs it to
+// updates_log. M7 only ever calls this with source 'owner_edit' (auto-sync,
+// no governance yet); M9 adds the auto-sync-vs-review-queue branch in front
+// of this, and calls it with source 'review_approval' once a human approves.
+export async function applyChangeSet(
+  tenant: TenantRow,
+  changeSet: ChangeSet,
+  summary: string,
+  source: 'owner_edit' | 'setup_wizard' | 'review_approval',
+  options: { rawInstruction?: string; approvedBy?: string } = {},
+): Promise<void> {
+  const client = getServiceClient()
+  const now = new Date().toISOString()
+
+  if (changeSet.productsCreate?.length) {
+    const { error } = await client.from('products').insert(
+      changeSet.productsCreate.map((p) => ({
+        tenant_id: tenant.id,
+        name: p.name,
+        description: p.description ?? null,
+        price_cents: p.priceCents,
+        currency: p.currency ?? 'USD',
+        available: p.available ?? true,
+        compatibility: p.compatibility ?? null,
+      })),
+    )
+    if (error) throw error
+  }
+
+  if (changeSet.productsUpdate?.length) {
+    for (const { id, ...fields } of changeSet.productsUpdate) {
+      const patch: Record<string, unknown> = { updated_at: now }
+      if (fields.name !== undefined) patch.name = fields.name
+      if (fields.description !== undefined) patch.description = fields.description
+      if (fields.priceCents !== undefined) patch.price_cents = fields.priceCents
+      if (fields.currency !== undefined) patch.currency = fields.currency
+      if (fields.available !== undefined) patch.available = fields.available
+      if (fields.compatibility !== undefined) patch.compatibility = fields.compatibility
+
+      const { error } = await client
+        .from('products')
+        .update(patch)
+        .eq('id', id)
+        .eq('tenant_id', tenant.id) // defense in depth: never touch another tenant's row
+      if (error) throw error
+    }
+  }
+
+  if (changeSet.hours?.length) {
+    const { error } = await client.from('hours').upsert(
+      changeSet.hours.map((h) => ({
+        tenant_id: tenant.id,
+        day_of_week: h.dayOfWeek,
+        opens_at: h.opensAt,
+        closes_at: h.closesAt,
+        closed: h.closed,
+        updated_at: now,
+      })),
+      { onConflict: 'tenant_id,day_of_week' },
+    )
+    if (error) throw error
+  }
+
+  if (changeSet.policies?.length) {
+    const { error } = await client.from('policies').upsert(
+      changeSet.policies.map((p) => ({
+        tenant_id: tenant.id,
+        kind: p.kind,
+        body: p.body,
+        updated_at: now,
+      })),
+      { onConflict: 'tenant_id,kind' },
+    )
+    if (error) throw error
+  }
+
+  const { error: logError } = await client.from('updates_log').insert({
+    tenant_id: tenant.id,
+    summary,
+    raw_instruction: options.rawInstruction ?? null,
+    change_set: changeSet,
+    source,
+    approved_by: options.approvedBy ?? null,
+  })
+  if (logError) throw logError
 }
 
 // Every MCP tool call for a tenant logs here. Powers the M10 activity
