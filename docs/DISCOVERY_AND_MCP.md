@@ -42,3 +42,11 @@ Production build passed. An SDK client connected through paired in-memory transp
 - [Google robots.txt guidance](https://developers.google.com/search/docs/crawling-indexing/robots/create-robots-txt): robots.txt belongs at the origin root.
 - [llms.txt proposal](https://llmstxt.org/): readable agent-facing context and links.
 - [MCP Streamable HTTP transport](https://modelcontextprotocol.io/specification/2025-11-25/basic/transports): POST-based protocol access and optional GET streaming.
+
+## Sidebar and update synchronization
+
+The sidebar **AI connection** page (`/dashboard/mcp?slug=<slug>`) reuses the same inspector as the dashboard modal, including field explanations, tools, and connection details. Its update action returns to the dashboard and focuses the existing update controls.
+
+Apply Update follows actual request states: understanding, governance/save, record refresh, then confirmation. The display retains the old values until the approved record is refreshed, and shows HTML-data and MCP-response excerpts from that same new record. Before/after prices come from the records rather than illustrative values. Pending review and failures do not show published success. The in-flight instruction stays visible until the request finishes, and repeated clicks remain disabled. The website iframe refreshes once for each record change, including hours and policies. Reduced-motion settings disable decorative animation.
+
+Local browser verification used a sample API fixture to exercise the sidebar route, navigation/focus, all request phases, both updated previews, iframe refresh, repeated-click lock, review/error handling, 390px layout, and reduced motion. It made no production database writes or paid AI calls.

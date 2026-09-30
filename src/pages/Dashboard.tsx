@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { AlertTriangle, Bot, FlaskConical, Globe, RefreshCw, X } from 'lucide-react'
 
@@ -253,6 +253,7 @@ export function Dashboard() {
   const [activity, setActivity] = useState<ActivitySummary | null>(null)
   const [activityFailed, setActivityFailed] = useState(false)
 
+  const updateFocused = useRef(false)
   const [phase, setPhase] = useState<UpdatePhase>('idle')
   const [stepIndex, setStepIndex] = useState(0)
   const [reviewNotice, setReviewNotice] = useState<{ label: string; text: string } | null>(null)
@@ -308,6 +309,13 @@ export function Dashboard() {
     el?.focus({ preventScroll: true })
   }
 
+  useEffect(() => {
+    if (record && searchParams.get('update') === '1' && !updateFocused.current) {
+      updateFocused.current = true
+      focusUpdateBox()
+    }
+  }, [record, searchParams])
+
   // Same structure -> apply handshake as before. The phases only mark calls
   // that really happen, so the animation never runs ahead of the backend.
   // In the demo, the real AI parse is tried first and checked against the
@@ -347,9 +355,8 @@ export function Dashboard() {
       const applyBody = await applyRes.json()
       if (!applyRes.ok) throw new Error(applyBody.error ?? 'Could not apply that change')
 
-      if (step) setStepIndex((i) => i + 1)
-
       if (applyBody.routing === 'review') {
+        if (step) setStepIndex((i) => i + 1)
         // Held changes are not published, so neither preview moves.
         loadActivity(slug)
         setPhase('idle')
@@ -364,6 +371,7 @@ export function Dashboard() {
       loadActivity(slug)
       setPhase('done')
       await wait(2200)
+      if (step) setStepIndex((i) => i + 1)
       setPhase('idle')
       return { status: 'applied', message: `Applied to website and MCP: ${summary}` }
     } catch (err) {
@@ -504,6 +512,7 @@ export function Dashboard() {
         <div className="grid items-stretch gap-4 lg:grid-cols-3">
           <SnapshotCard activity={activity} demo={demo} />
           <WebsitePreview
+            record={record}
             product={product}
             businessName={record.profile.name}
             logoUrl={record.profile.logoUrl}
@@ -523,6 +532,7 @@ export function Dashboard() {
         </div>
 
         <UpdateChat
+          record={record}
           phase={phase}
           demo={demoScript}
           example={example}

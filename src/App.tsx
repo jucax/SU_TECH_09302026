@@ -3,6 +3,7 @@ import { Route, Routes } from 'react-router-dom'
 import { Dashboard } from '@/pages/Dashboard'
 import { Demo } from '@/pages/Demo'
 import { DashboardAnalytics } from '@/pages/DashboardAnalytics'
+import { DashboardMcp } from '@/pages/DashboardMcp'
 import { DashboardProducts } from '@/pages/DashboardProducts'
 import { DashboardSettings } from '@/pages/DashboardSettings'
 import { DashboardTest } from '@/pages/DashboardTest'
@@ -19,6 +20,7 @@ function App() {
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/dashboard/monitoring" element={<Monitoring />} />
       <Route path="/dashboard/review" element={<ReviewQueue />} />
+      <Route path="/dashboard/mcp" element={<DashboardMcp />} />
       <Route path="/dashboard/products" element={<DashboardProducts />} />
       <Route path="/dashboard/analytics" element={<DashboardAnalytics />} />
       <Route path="/dashboard/settings" element={<DashboardSettings />} />

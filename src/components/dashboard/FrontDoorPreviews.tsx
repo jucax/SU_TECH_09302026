@@ -16,7 +16,7 @@ const PHASE_LABEL: Record<UpdatePhase, string> = {
   understanding: 'Reading your request...',
   applying: 'Updating the approved record...',
   refreshing: 'Syncing...',
-  done: 'Updated',
+  done: 'Synced to the approved record',
 }
 
 interface PreviewProps {
@@ -108,10 +108,10 @@ function SiteFrame({ src, title, reloadKey }: { src: string; title: string; relo
   )
 }
 
-export function WebsitePreview({ product, slug, phase, onEdit }: PreviewProps) {
+export function WebsitePreview({ record, slug, phase, onEdit }: PreviewProps & { record: VerifiedRecord }) {
   const siteUrl = `/site/${slug}`
   // Reload the frame after each edit so it shows the freshly published values.
-  const reloadKey = `${product?.name}-${product?.priceCents}-${product?.available}-${phase === 'done'}`
+  const reloadKey = JSON.stringify({ slug, products: record.products, hours: record.hours, policies: record.policies })
   return (
     <Card className={cardRing(phase)}>
       <header className="flex items-center justify-between gap-2">

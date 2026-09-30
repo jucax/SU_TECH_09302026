@@ -34,11 +34,12 @@ const tools = [
 interface Props {
   record: VerifiedRecord
   phase: string
+  embedded?: boolean
   onClose: () => void
   onUpdate: () => void
 }
 
-export function McpInspector({ record, phase, onClose, onUpdate }: Props) {
+export function McpInspector({ record, phase, onClose, onUpdate, embedded = false }: Props) {
   const dialog = useRef<HTMLDialogElement>(null)
   const [tab, setTab] = useState<'data' | 'tools' | 'connection'>('data')
   const [section, setSection] = useState<'profile' | 'products' | 'hours' | 'policies'>('products')
@@ -51,12 +52,13 @@ export function McpInspector({ record, phase, onClose, onUpdate }: Props) {
   const lines = JSON.stringify({ [section]: data[section] }, null, 2).split('\n')
 
   useEffect(() => {
+    if (embedded) return
     const element = dialog.current
     if (element && !element.open) element.showModal()
     const previous = document.body.style.overflow
     document.body.style.overflow = 'hidden'
     return () => { document.body.style.overflow = previous }
-  }, [])
+  }, [embedded])
 
   async function copy() {
     try { await navigator.clipboard.writeText(endpoint); setCopied('ok') }
@@ -69,11 +71,10 @@ export function McpInspector({ record, phase, onClose, onUpdate }: Props) {
     requestAnimationFrame(onUpdate)
   }
 
-  return (
-    <dialog ref={dialog} onClose={onClose} onClick={event => { if (event.target === event.currentTarget) dialog.current?.close() }} aria-labelledby="mcp-inspector-title" aria-describedby="mcp-inspector-summary" className="m-auto max-h-[90dvh] w-[calc(100%-24px)] max-w-5xl overflow-y-auto rounded-2xl border border-border bg-white p-0 text-navy shadow-2xl backdrop:bg-navy/60">
+  const content = (<>
       <header className="flex items-start justify-between gap-4 border-b border-border p-5 sm:p-6">
         <div><div className="mb-2 flex items-center gap-2 text-xs font-semibold text-action-blue"><Server size={16} aria-hidden="true" /> YOUR FRONT DOOR FOR AI</div><h2 id="mcp-inspector-title" className="text-xl font-bold sm:text-2xl">AI connection</h2><p id="mcp-inspector-summary" className="mt-1 text-sm text-secondary">Explore what compatible AI assistants can read about {record.profile.name}.</p></div>
-        <button type="button" autoFocus onClick={() => dialog.current?.close()} aria-label="Close AI connection" className="rounded-lg p-2 hover:bg-gray focus-visible:ring-2 focus-visible:ring-action-blue"><X size={20} /></button>
+        {!embedded && <button type="button" autoFocus onClick={() => dialog.current?.close()} aria-label="Close AI connection" className="rounded-lg p-2 hover:bg-gray focus-visible:ring-2 focus-visible:ring-action-blue"><X size={20} /></button>}
       </header>
       <div className="flex flex-wrap items-center justify-between gap-3 bg-subtle-blue/40 px-5 py-3 sm:px-6"><span className="flex items-center gap-2 text-xs font-semibold"><LockKeyhole size={14} /> Read-only · {busy ? 'Update in progress' : 'Shared approved record'}</span><span className="text-xs text-secondary">Your website and AI connection use the same information.</span></div>
       <div className="flex gap-1 border-b border-border px-5 pt-3 sm:px-6" role="group" aria-label="Inspector views">{([['data', 'Approved data'], ['tools', 'AI tools'], ['connection', 'Connection']] as const).map(([value, label]) => <button key={value} type="button" aria-pressed={tab === value} onClick={() => setTab(value)} className={cn('min-h-11 rounded-t-lg border-b-2 px-3 text-sm font-semibold focus-visible:ring-2 focus-visible:ring-action-blue', tab === value ? 'border-action-blue bg-subtle-blue text-action-blue' : 'border-transparent text-secondary hover:bg-gray')}>{label}</button>)}</div>
@@ -85,6 +86,13 @@ export function McpInspector({ record, phase, onClose, onUpdate }: Props) {
         {tab === 'connection' && <div className="space-y-4"><div className="rounded-xl border border-border bg-gray p-4"><h3 className="text-sm font-semibold">Your MCP endpoint</h3><code className="mt-2 block select-text break-all text-xs leading-relaxed">{endpoint}</code><button type="button" onClick={copy} className="mt-3 inline-flex min-h-10 items-center gap-2 rounded-lg border border-border bg-white px-3 text-sm font-semibold focus-visible:ring-2 focus-visible:ring-action-blue">{copied === 'ok' ? <Check size={15} /> : <Copy size={15} />} {copied === 'ok' ? 'Copied' : 'Copy connection URL'}</button><p role="status" className="mt-2 text-xs text-secondary">{copied === 'fail' ? 'Copy failed. Select and copy the URL above.' : 'Public, read-only connection. No owner credentials needed.'}</p></div><p className="text-sm leading-relaxed text-secondary">Add this URL to a compatible MCP client using Streamable HTTP. The client uses POST to initialize and discover the tools. Opening this endpoint as a browser page does not connect an AI assistant.</p><a href={`/site/${record.profile.slug}/llms.txt`} target="_blank" rel="noreferrer" className="text-sm font-semibold text-action-blue underline underline-offset-4">View business facts and connection instructions ↗</a></div>}
       </div>
       <footer className="flex flex-wrap items-center justify-between gap-4 border-t border-border bg-gray p-5 sm:p-6"><p className="max-w-md text-xs leading-relaxed text-secondary">Keep both front doors consistent. Request changes through OneBridge AI; uncertain changes still go through human review.</p><button type="button" onClick={update} className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-action-blue px-4 text-sm font-semibold text-white hover:opacity-90 focus-visible:ring-2 focus-visible:ring-action-blue focus-visible:ring-offset-2"><Sparkles size={17} /> Update with OneBridge AI</button></footer>
+  </>)
+
+  return embedded ? (
+    <section aria-labelledby="mcp-inspector-title" className="overflow-hidden rounded-2xl border border-border bg-white text-navy shadow-card">{content}</section>
+  ) : (
+    <dialog ref={dialog} onClose={onClose} onClick={event => { if (event.target === event.currentTarget) dialog.current?.close() }} aria-labelledby="mcp-inspector-title" aria-describedby="mcp-inspector-summary" className="m-auto max-h-[90dvh] w-[calc(100%-24px)] max-w-5xl overflow-y-auto rounded-2xl border border-border bg-white p-0 text-navy shadow-2xl backdrop:bg-navy/60">
+      {content}
     </dialog>
   )
 }

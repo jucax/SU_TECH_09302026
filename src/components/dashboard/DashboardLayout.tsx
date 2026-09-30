@@ -9,6 +9,7 @@ import {
   LogOut,
   Package,
   Settings,
+  Server,
   type LucideIcon,
 } from 'lucide-react'
 
@@ -29,6 +30,7 @@ function navItems(slug: string | null): NavItem[] {
   return [
     { label: 'Dashboard', icon: LayoutDashboard, to: `/dashboard${q}`, end: true },
     { label: 'Products', icon: Package, to: `/dashboard/products${q}` },
+    { label: 'AI connection', icon: Server, to: `/dashboard/mcp${q}` },
     { label: 'Analytics', icon: Activity, to: `/dashboard/analytics${q}` },
     { label: 'Test', icon: FlaskConical, to: `/dashboard/test${q}` },
     { label: 'Review queue', icon: ClipboardCheck, to: `/dashboard/review${q}` },

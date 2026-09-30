@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
-import { Lock, Send, Sparkles } from 'lucide-react'
+import { Check, Loader2, Lock, Send, Sparkles } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import type { VerifiedRecord } from '@lib/schemas'
+import { UpdateSync } from './UpdateSync'
 import type { UpdatePhase } from './FrontDoorPreviews'
 
 export interface UpdateOutcome {
@@ -26,6 +28,7 @@ export interface DemoScript {
 
 interface UpdateChatProps {
   phase: UpdatePhase
+  record: VerifiedRecord
   demo: DemoScript | null
   example: string | null
   reviewHref: string
@@ -34,11 +37,15 @@ interface UpdateChatProps {
 
 export const UPDATE_INPUT_ID = 'onebridge-update-input'
 
-export function UpdateChat({ phase, demo, example, reviewHref, onSubmit }: UpdateChatProps) {
+export function UpdateChat({ phase, record, demo, example, reviewHref, onSubmit }: UpdateChatProps) {
   const [typed, setTyped] = useState('')
+  const [before, setBefore] = useState<VerifiedRecord | null>(null)
+  const [outcome, setOutcome] = useState<UpdateOutcome | null>(null)
+  const [submitting, setSubmitting] = useState(false)
+  const [pendingInstruction, setPendingInstruction] = useState('')
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const endRef = useRef<HTMLDivElement>(null)
-  const busy = phase !== 'idle' && phase !== 'done'
+  const busy = submitting || (phase !== 'idle' && phase !== 'done')
 
   const locked = demo !== null
   const text = locked ? (demo.request ?? '') : typed
@@ -50,12 +57,20 @@ export function UpdateChat({ phase, demo, example, reviewHref, onSubmit }: Updat
   async function send() {
     const instruction = text.trim()
     if (!instruction || busy) return
+    setBefore(record)
+    setOutcome(null)
+    setPendingInstruction(instruction)
+    setSubmitting(true)
     setMessages((m) => [...m, { from: 'owner', text: instruction }])
     if (!locked) setTyped('')
-    const outcome = await onSubmit(instruction)
+    let result: UpdateOutcome
+    try { result = await onSubmit(instruction) }
+    catch { result = { status: 'error', message: 'The update could not be confirmed. Please reload and try again.' } }
+    setSubmitting(false)
+    setOutcome(result)
     // Failed updates give the owner their text back so they can retry.
-    if (!locked && outcome.status === 'error') setTyped(instruction)
-    setMessages((m) => [...m, { from: 'ai', text: outcome.message, status: outcome.status }])
+    if (!locked && result.status === 'error') setTyped(instruction)
+    setMessages((m) => [...m, { from: 'ai', text: result.message, status: result.status }])
   }
 
   return (
@@ -121,7 +136,7 @@ export function UpdateChat({ phase, demo, example, reviewHref, onSubmit }: Updat
         <textarea
           id={UPDATE_INPUT_ID}
           rows={2}
-          value={text}
+          value={submitting ? pendingInstruction : text}
           readOnly={locked}
           onChange={(e) => setTyped(e.target.value)}
           placeholder={
@@ -152,11 +167,12 @@ export function UpdateChat({ phase, demo, example, reviewHref, onSubmit }: Updat
             disabled={busy || !text.trim()}
             className="min-h-[44px] flex-1 gap-2"
           >
-            <Send size={16} aria-hidden="true" />
-            {busy ? 'Applying...' : 'Apply update'}
+            {phase === 'done' ? <Check size={16} aria-hidden="true" /> : busy ? <Loader2 size={16} aria-hidden="true" className="motion-safe:animate-spin" /> : <Send size={16} aria-hidden="true" />}
+            {phase === 'done' ? 'Both outputs updated' : phase === 'understanding' ? 'Reading request…' : phase === 'refreshing' ? 'Refreshing outputs…' : busy ? 'Applying update…' : 'Apply update'}
           </Button>
         </div>
       </div>
+      {before && <UpdateSync phase={phase} before={before} current={record} outcome={outcome} />}
     </section>
   )
 }
